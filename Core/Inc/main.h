@@ -215,6 +215,8 @@ void polyfit(int n,double x[],double y[],int poly_n,double p[]);
 void gauss_solve(int n,double A[],double x[],double b[]);
 void ModbusRead();
 uint16_t crc16_modbus(uint8_t *data, uint16_t length);
+void low_pass_filter_init(void);
+float low_pass_filter(float value);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

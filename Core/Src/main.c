@@ -179,6 +179,15 @@ int DelayUs = 50;
 int timCounter = 0;
 
 /********************************参数声明**************************************
+*参数用途:	滤波器参数
+*修改日期:	20231129
+*******************************************************************************/
+float fc = 2.0f;     //截止频率
+float Ts = 0.02f;    //采样周期
+static float pi = 3.14159f; //π
+float alpha = 0;     //滤波系数
+
+/********************************参数声明**************************************
 *参数用途:	用于测试的数据
 *修改日期:	20230531
 *******************************************************************************/
@@ -1242,17 +1251,22 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						{
 						case 'P':
 							PrintfFlag = (int)operand;
+							printf("[InfoFlag]Print%d\r\n",(int)operand);
 							break;
 						case 'M':
 							MITFlag = (int)operand;
+							printf("[InfoFlag]Mode%d\r\n",(int)operand);
 							break;
 						case 'D':
 							DelayFlag = (int)operand;
+							printf("[InfoFlag]delay%d\r\n",(int)operand);
 						case 'm':
 							Delay = (int)operand;
+							printf("[InfoFlag]ms%d\r\n",(int)operand);
 							break;
 						case 'u':
 							DelayUs = (int)operand;
+							printf("[InfoFlag]us%d\r\n",(int)operand);
 						case 'Z':
 							if(operand == 1){
 								for(int i=0;i<8;i++)
@@ -1260,6 +1274,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 									DataRightBufFoot.DataZero[DataRightBufFoot.Point[i]] = DataRightBufFoot.Data[DataRightBufFoot.Point[i]];
 									DataLeftBuf.DataZero[DataRightBufFoot.Point[i]] = DataLeftBuf.Data[DataRightBufFoot.Point[i]];
 								}
+								printf("[InfoFlag]Timing\r\n");
 							}
 							else if(operand == 0){
 								for(int i=0;i<8;i++)
@@ -1267,14 +1282,23 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 									DataRightBufFoot.DataZero[DataRightBufFoot.Point[i]] = 0;
 									DataLeftBuf.DataZero[DataRightBufFoot.Point[i]] = 0;
 								}
+								printf("[InfoFlag]Zero\r\n");
 							}
 //							huart1_printf("F%c%d\n",operator2,(int)operand);
+							break;
+						case 'f':
+							fc = operand;
+							printf("[InfoFlag]fs=%.1f\r\n",operand);
+							break;
+						case 'T':
+							Ts = operand;
+							printf("[InfoFlag]Ts=%.2f\r\n",operand);
 							break;
 						default:
 							printf("[Info]ErrorFun\r\n");
 							break;
 						}
-						printf("[InfoFlag]\r\n");
+//						printf("[InfoFlag]\r\n");
 						break;
 					default:
 						break;
@@ -1876,6 +1900,45 @@ uint16_t crc16_modbus(uint8_t *data, uint16_t length) {
         }
     }
     return crc;
+}
+
+/********************************实现函数**************************************
+*函数原型:	low_pass_filter_init()
+*功　　能:	滤波器初始化
+*修改日期:	20231129
+ * 参数		| 介绍
+ * ---------+--------------------------------------
+ * 无		| 无
+*******************************************************************************/
+void low_pass_filter_init(void){
+    float b = 2.0 * pi * fc * Ts;
+    alpha = b / (b + 1);
+}
+
+/********************************实现函数**************************************
+*函数原型:	low_pass_filter()
+*功　　能:	滤波器
+*修改日期:	20231129
+ * 参数		| 介绍
+ * ---------+--------------------------------------
+* value		| 值
+*******************************************************************************/
+float low_pass_filter(float value){
+    static float out_last = 0; //上一次滤波值
+    float out;
+
+  /***************** 如果第一次进入，则给 out_last 赋值 ******************/
+    static char fisrt_flag = 1;
+    if (fisrt_flag == 1){
+        fisrt_flag = 0;
+        out_last = value;
+    }
+
+  /*************************** 一阶滤波 *********************************/
+    out = out_last + alpha * (value - out_last);
+    out_last = out;
+
+    return out;
 }
 
 #pragma endregion
