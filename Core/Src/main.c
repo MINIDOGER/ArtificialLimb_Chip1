@@ -183,8 +183,8 @@ int timCounter = 0;
 *参数用途:	滤波器参数
 *修改日期:	20231129
 *******************************************************************************/
-float fc = 2.0f;     		//截止频率
-float Ts = 0.02f;    		//采样周期
+float fc = 10.0f;     		//截止频率
+float Ts = 0.01f;    		//采样周期
 static float pi = 3.14159f; //π
 float alpha = 0;    		//滤波系数
 
@@ -586,9 +586,12 @@ int main(void)
 	HAL_Delay_us(50);
 	HAL_CAN_Start(&hcan2);
 
+
 //	HAL_TIM_Base_Start_IT(&htim2);
 
 //	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
+
+	low_pass_filter_init();
 
 	while (1)
 	{
@@ -729,9 +732,12 @@ int main(void)
 
 		else if(Mode == 2)
 		{
-			printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
+			Right.Hip.AngxFilter = low_pass_filter(Right.Hip.AngxCal);
+			Right.Knee.AngxFilter = low_pass_filter(Right.Knee.AngxCal);
+			Right.Ankle.AngxFilter = low_pass_filter(Right.Ankle.AngxCal);
+			DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
 					Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
-					Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal);
+					Right.Hip.AngxFilter,Right.Knee.AngxFilter,Right.Ankle.AngxFilter);
 		}
 		else if(Mode == 0)
 		{

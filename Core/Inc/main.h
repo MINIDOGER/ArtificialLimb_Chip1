@@ -116,7 +116,8 @@ struct Data{
 	struct StateBuf State; //缓存
 	struct DataFit Fit;
 
-	float AngxCal;
+	float AngxCal; //关节角度x方向计算值
+	float AngxFilter; //关节角度x方向滤波值
 }; //关节各个数据
 
 struct joint{
