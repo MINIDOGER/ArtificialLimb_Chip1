@@ -701,7 +701,7 @@ int main(void)
 							DataLeftBuf.Data[9],DataLeftBuf.Data[12],DataLeftBuf.Data[13],DataLeftBuf.Data[14]);
 					break;
 				case 5: //拟合数据输出
-					DataDiv(&Normal);
+//					DataDiv(&Normal);
 					DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
 							Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 				default:
@@ -726,6 +726,7 @@ int main(void)
 					break;
 				}
 				HAL_TIM_Base_Start_IT(&htim2);
+				Normal.State = 1;
 				ModeFlag = 1;
 			}
 		}
@@ -762,6 +763,7 @@ int main(void)
 				timCounter = 0;
 				ModeFlag = 0;
 			}
+			Normal.State = 0;
 			while(1)
 			{
 //				DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
@@ -1687,72 +1689,108 @@ double *createArray(int size)
  * ---------+--------------------------------------
  * Fit		| 数据储存位置
 *******************************************************************************/
-void DataDiv(struct DataFit *Fit)
-{
-	switch(Fit->State)
-	{
-	case 0:
-		if(DataLeftBuf.Data[4]>0 && DataLeftBuf.Data[4]<1000)
-		{
-			Fit->FitBufKnee[Fit->sizenum] = Left.Knee.AngxCal;
-			Fit->FitBufAnkle[Fit->sizenum] = Left.Ankle.AngxCal;
-			Fit->sizenum = Fit->sizenum + 1;
+//void DataDiv(struct DataFit *Fit)
+//{
+//	switch(Fit->State)
+//	{
+//	case 0:
+//		if(DataLeftBuf.Data[4]>0 && DataLeftBuf.Data[4]<1000)
+//		{
+//			Fit->FitBufKnee[Fit->sizenum] = Left.Knee.AngxCal;
+//			Fit->FitBufAnkle[Fit->sizenum] = Left.Ankle.AngxCal;
+//			Fit->sizenum = Fit->sizenum + 1;
+//		}
+//		else
+//		{
+//			double *arrayKnee = createArray(Fit->sizenum);
+//			double *arrayAnkle = createArray(Fit->sizenum);
+//			double *arrayY = createArray(Fit->sizenum);
+//
+//			memcpy(&arrayKnee,Fit->FitBufKnee,Fit->sizenum);
+//			memcpy(&arrayAnkle,Fit->FitBufAnkle,Fit->sizenum);
+//
+//			int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
+//
+//			polyfit(sizenum, arrayKnee, arrayY, dimension, Fit->PKneeS1);
+//			polyfit(sizenum, arrayAnkle, arrayY, dimension, Fit->PAnkleS1);
+//
+//			Fit->State = 1;
+//			Fit->sizenum = 0;
+//
+//			free(arrayKnee);
+//			free(arrayAnkle);
+//			free(arrayY);
+//		}
+//		break;
+//	case 1:
+//		if(DataLeftBuf.Data[4]>1000)
+//		{
+//			Fit->FitBufKnee[Fit->sizenum] = Left.Knee.AngxCal;
+//			Fit->FitBufAnkle[Fit->sizenum] = Left.Ankle.AngxCal;
+//			Fit->sizenum = Fit->sizenum + 1;
+//		}
+//		else
+//		{
+//			double *arrayKnee = createArray(Fit->sizenum);
+//			double *arrayAnkle = createArray(Fit->sizenum);
+//			double *arrayY = createArray(Fit->sizenum);
+//
+//			memcpy(&arrayKnee,Fit->FitBufKnee,Fit->sizenum);
+//			memcpy(&arrayAnkle,Fit->FitBufAnkle,Fit->sizenum);
+//
+//			int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
+//
+//			polyfit(sizenum, arrayKnee, arrayY, dimension, Fit->PKneeS2);
+//			polyfit(sizenum, arrayAnkle, arrayY, dimension, Fit->PAnkleS2);
+//
+//			Fit->State = 0;
+//			Fit->sizenum = 0;
+//
+//			free(arrayKnee);
+//			free(arrayAnkle);
+//			free(arrayY);
+//		}
+//		break;
+//	default:
+//		break;
+//	}
+//}
+
+/********************************实现函数**************************************
+*函数原型:	void DataDiv
+*功　　能:	数据分割便于拟合
+*修改日期:	20231201
+ * 参数		| 介绍
+ * ---------+--------------------------------------
+ * Fit		| 数据储存位置
+*******************************************************************************/
+void DataDiv(struct DataFit *Fit){
+	if(Fit->FitFlagKnee == 0){
+		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
+		if(Fit->sizenum > 20){
+			if((Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0){
+				Fit->FitFlagKnee = 1;
+			}
 		}
-		else
-		{
-			double *arrayKnee = createArray(Fit->sizenum);
-			double *arrayAnkle = createArray(Fit->sizenum);
-			double *arrayY = createArray(Fit->sizenum);
-
-			memcpy(&arrayKnee,Fit->FitBufKnee,Fit->sizenum);
-			memcpy(&arrayAnkle,Fit->FitBufAnkle,Fit->sizenum);
-
-			int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
-
-			polyfit(sizenum, arrayKnee, arrayY, dimension, Fit->PKneeS1);
-			polyfit(sizenum, arrayAnkle, arrayY, dimension, Fit->PAnkleS1);
-
-			Fit->State = 1;
-			Fit->sizenum = 0;
-
-			free(arrayKnee);
-			free(arrayAnkle);
-			free(arrayY);
-		}
-		break;
-	case 1:
-		if(DataLeftBuf.Data[4]>1000)
-		{
-			Fit->FitBufKnee[Fit->sizenum] = Left.Knee.AngxCal;
-			Fit->FitBufAnkle[Fit->sizenum] = Left.Ankle.AngxCal;
-			Fit->sizenum = Fit->sizenum + 1;
-		}
-		else
-		{
-			double *arrayKnee = createArray(Fit->sizenum);
-			double *arrayAnkle = createArray(Fit->sizenum);
-			double *arrayY = createArray(Fit->sizenum);
-
-			memcpy(&arrayKnee,Fit->FitBufKnee,Fit->sizenum);
-			memcpy(&arrayAnkle,Fit->FitBufAnkle,Fit->sizenum);
-
-			int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
-
-			polyfit(sizenum, arrayKnee, arrayY, dimension, Fit->PKneeS2);
-			polyfit(sizenum, arrayAnkle, arrayY, dimension, Fit->PAnkleS2);
-
-			Fit->State = 0;
-			Fit->sizenum = 0;
-
-			free(arrayKnee);
-			free(arrayAnkle);
-			free(arrayY);
-		}
-		break;
-	default:
-		break;
+		Fit->sizenum++;
 	}
+	else if(Fit->FitFlagKnee == 1){
+		double *arrayKnee = createArray(Fit->sizenum + 1);
+		double *arrayX = createArray(Fit->sizenum + 1);
+		for(int i=1;i<Fit->sizenum+2;i++){
+			arrayX[i]=i;
+		}
+		memcpy(&arrayKnee,Fit->FitBufKnee,Fit->sizenum + 1);
+		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
+		polyfit(sizenum, arrayX, arrayKnee, dimension, Fit->PKneeS1);
+		Fit->FitFlagKnee = 0;
+		Fit->sizenum = 0;
+		free(arrayKnee);
+		free(arrayX);
+	}
+
 }
+
 
 /********************************实现函数**************************************
 *函数原型:	void polyfit(n,x,y,poly_n,a)

@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "main.h"
 #include "stdio.h"
 #include "string.h"
 #include <stdarg.h>
@@ -491,6 +492,10 @@ void UART4_IRQHandler(void)
 	memcpy(&Right.Knee.Buf.rxData,p_IsOK4,33);
 	MPU6050ModDataBufDMA(&Right.Knee);
 	Right.Knee.AngxCal = Right.Knee.Angx - Right.Hip.Angx;
+	if(Normal.State == 1){
+		DataDiv(&Normal);
+	}
+
 
 
 	///不管是复制也好，放进去队列也罢，处理你接收到的数据的代码建议从这里结束
