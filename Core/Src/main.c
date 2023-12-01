@@ -1767,8 +1767,10 @@ double *createArray(int size)
 void DataDiv(struct DataFit *Fit){
 	if(Fit->FitFlagKnee == 0){
 		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
-		if(Fit->sizenum > 20){
-			if((Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0){
+		if(Fit->sizenum > 3){
+			if(	(Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*
+				(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
+				|| Fit->sizenum > 50){
 				Fit->FitFlagKnee = 1;
 			}
 		}
@@ -1788,7 +1790,6 @@ void DataDiv(struct DataFit *Fit){
 		free(arrayKnee);
 		free(arrayX);
 	}
-
 }
 
 
