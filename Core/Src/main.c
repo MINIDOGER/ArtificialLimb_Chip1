@@ -183,7 +183,7 @@ int timCounter = 0;
 *参数用途:	滤波器参数
 *修改日期:	20231129
 *******************************************************************************/
-float fc = 10.0f;     		//截止频率
+float fc = 30.0f;     		//截止频率
 float Ts = 0.01f;    		//采样周期
 static float pi = 3.14159f; //π
 float alpha = 0;    		//滤波系数
@@ -1295,10 +1295,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 							break;
 						case 'f':
 							fc = operand;
+							low_pass_filter_init();
 							printf("[InfoFlag]fs=%.1f\r\n",operand);
 							break;
 						case 'T':
 							Ts = operand;
+							low_pass_filter_init();
 							printf("[InfoFlag]Ts=%.2f\r\n",operand);
 							break;
 						default:
