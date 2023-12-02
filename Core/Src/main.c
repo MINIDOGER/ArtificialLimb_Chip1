@@ -710,7 +710,7 @@ int main(void)
 					break;
 				case 5: //拟合数据输出
 //					DataDiv(&Normal);
-					DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
+					DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
 							Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 				default:
 					break;
@@ -748,12 +748,17 @@ int main(void)
 //			DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
 //					Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
 //					Right.Hip.AngxFilter,Right.Knee.AngxFilter,Right.Ankle.AngxFilter);
+
+
 			tempx = (double *)calloc(100 , sizeof(double));
+//			tempx = createArray(100);
+
 			for(int i=0; i<100; i++){
 				tempx[i] = KneeReference[i];
 			}
 			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
 			DMA_usart2_printf("%f\r\n",Normal.PKneeS1[0]);
+			free(tempx);
 
 		}
 		else if(Mode == 0)
@@ -1788,20 +1793,24 @@ void DataDiv(struct DataFit *Fit){
 				(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
 				|| Fit->sizenum > 50){
 				Fit->FitFlagKnee = 1;
-				huart2_printf("%d",Fit->FitFlagKnee);
 			}
 		}
 		Fit->sizenum++;
 	}
 	else if(Fit->FitFlagKnee == 1){
-		double *arrayKnee = createArray(Fit->sizenum + 1);
-		double *arrayX = createArray(Fit->sizenum + 1);
-		for(int i=1;i<Fit->sizenum+2;i++){
-			arrayX[i]=i;
+//		double *arrayKnee = createArray(Fit->sizenum + 1);
+//		double *arrayX = createArray(Fit->sizenum + 1);
+		double *arrayKnee = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
+		double *arrayX = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
+		for(int i=0;i<Fit->sizenum+1;i++){
+			arrayX[i]=i+1;
+			arrayKnee[i] = Fit->FitBufKnee[i];
+//			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
 		}
-		memcpy(&arrayKnee,Fit->FitBufKnee,Fit->sizenum + 1);
+//		DMA_usart2_printf("%d\r\n",Fit->sizenum+1);
 		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
-		polyfit(sizenum, arrayX, arrayKnee, dimension, Fit->PKneeS1);
+//		DMA_usart2_printf("%d\r\n",sizenum);
+		polyfit(Fit->sizenum+1, arrayX, arrayKnee, dimension, Fit->PKneeS1);
 		Fit->FitFlagKnee = 0;
 		Fit->sizenum = 0;
 		free(arrayKnee);
