@@ -433,6 +433,10 @@ int dimension = 5;
 float Ank0[] = {};
 float Kne0[] = {};
 
+
+float xtest[100];
+double *tempx;
+float S1[6];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -593,6 +597,10 @@ int main(void)
 
 	low_pass_filter_init();
 
+	for(int i=1; i<101; i++){
+		xtest[i-1] = i;
+	}
+
 	while (1)
 	{
 		if(Mode == 1)
@@ -733,12 +741,20 @@ int main(void)
 
 		else if(Mode == 2)
 		{
-			Right.Hip.AngxFilter = low_pass_filter(Right.Hip.AngxCal);
-			Right.Knee.AngxFilter = low_pass_filter(Right.Knee.AngxCal);
-			Right.Ankle.AngxFilter = low_pass_filter(Right.Ankle.AngxCal);
-			DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
-					Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
-					Right.Hip.AngxFilter,Right.Knee.AngxFilter,Right.Ankle.AngxFilter);
+			//该低通滤波效果不行
+//			Right.Hip.AngxFilter = low_pass_filter(Right.Hip.AngxCal);
+//			Right.Knee.AngxFilter = low_pass_filter(Right.Knee.AngxCal);
+//			Right.Ankle.AngxFilter = low_pass_filter(Right.Ankle.AngxCal);
+//			DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
+//					Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
+//					Right.Hip.AngxFilter,Right.Knee.AngxFilter,Right.Ankle.AngxFilter);
+			tempx = (double *)calloc(100 , sizeof(double));
+			for(int i=0; i<100; i++){
+				tempx[i] = KneeReference[i];
+			}
+			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
+			DMA_usart2_printf("%f\r\n",Normal.PKneeS1[0]);
+
 		}
 		else if(Mode == 0)
 		{
@@ -1772,6 +1788,7 @@ void DataDiv(struct DataFit *Fit){
 				(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
 				|| Fit->sizenum > 50){
 				Fit->FitFlagKnee = 1;
+				huart2_printf("%d",Fit->FitFlagKnee);
 			}
 		}
 		Fit->sizenum++;
