@@ -21,6 +21,7 @@
 *修改日期:20231201	修改拟合函数，未测试； 修改数据拟合分割时的判断逻辑
 *修改日期:20231202	滤波函数效果暂时还是不理想，拟合函数测试卡死，在S=2测试模式下现已发现可能原因，下一步尝试修复
 *修改日期:20231202	修改拟合函数，解决nan和卡死问题，下一步需要验证拟合的正确性。卡死：动态分配内存存在问题；nan：输入数据 个数为0
+*修改日期:20231204	修正动态内存分配错误
 *******************************************************************************/
 
 /*
@@ -753,8 +754,8 @@ int main(void)
 //					Right.Hip.AngxFilter,Right.Knee.AngxFilter,Right.Ankle.AngxFilter);
 
 
-			tempx = (double *)calloc(100 , sizeof(double));
-//			tempx = createArray(100);
+//			tempx = (double *)calloc(100 , sizeof(double));
+			tempx = createArray(100);
 
 			for(int i=0; i<100; i++){
 				tempx[i] = KneeReference[i];
@@ -1690,7 +1691,7 @@ void AngDataBuf(struct DataUnionBuf *AllData, uint8_t cRx)
 *******************************************************************************/
 double *createArray(int size)
 {
-	double *array = (double *) malloc(size * sizeof(int));  // 动态分配内存空间
+	double *array = (double *) malloc(size * sizeof(double));  // 动态分配内存空间
 
     if (array == NULL) {
         printf("Memory allocation failed.\n");
@@ -1699,7 +1700,7 @@ double *createArray(int size)
 
     // 初始化数组
     for (int i = 0; i < size; i++) {
-        array[i] = i;
+        array[i] = (double)i;
     }
 
     return array;
@@ -1801,10 +1802,14 @@ void DataDiv(struct DataFit *Fit){
 		Fit->sizenum++;
 	}
 	else if(Fit->FitFlagKnee == 1){
-//		double *arrayKnee = createArray(Fit->sizenum + 1);
-//		double *arrayX = createArray(Fit->sizenum + 1);
-		double *arrayKnee = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
-		double *arrayX = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
+		//内存分配方式1
+		double *arrayKnee = createArray(Fit->sizenum + 1);
+		double *arrayX = createArray(Fit->sizenum + 1);
+
+		//内存分配方式2
+//		double *arrayKnee = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
+//		double *arrayX = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
+
 		for(int i=0;i<Fit->sizenum+1;i++){
 			arrayX[i]=i+1;
 			arrayKnee[i] = Fit->FitBufKnee[i];
