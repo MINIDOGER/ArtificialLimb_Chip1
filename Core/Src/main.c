@@ -714,8 +714,8 @@ int main(void)
 					break;
 				case 5: //拟合数据输出
 //					DataDiv(&Normal);
-					DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
-							Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
+//					DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
+//							Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 				default:
 					break;
 				}
@@ -760,7 +760,7 @@ int main(void)
 			for(int i=0; i<100; i++){
 				tempx[i] = KneeReference[i];
 			}
-			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
+//			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
 			DMA_usart2_printf("%f\r\n",Normal.PKneeS1[0]);
 			free(tempx);
 
@@ -1813,12 +1813,14 @@ void DataDiv(struct DataFit *Fit){
 		for(int i=0;i<Fit->sizenum+1;i++){
 			arrayX[i]=i+1;
 			arrayKnee[i] = Fit->FitBufKnee[i];
-//			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
+			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
 		}
-//		DMA_usart2_printf("%d\r\n",Fit->sizenum+1);
+		DMA_usart2_printf("%d\r\n",Fit->sizenum+1);
 //		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
 //		DMA_usart2_printf("%d\r\n",sizenum);
 		polyfit(Fit->sizenum+1, arrayX, arrayKnee, dimension, Fit->PKneeS1);
+		DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
+				Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 		Fit->FitFlagKnee = 0;
 		Fit->sizenum = 0;
 		free(arrayKnee);
