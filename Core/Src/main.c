@@ -605,7 +605,7 @@ int main(void)
 	low_pass_filter_init();
 
 	for(int i=1; i<101; i++){
-		xtest[i-1] = i;
+		xtest[i-1] = (double)i/100;
 	}
 
 	while (1)
@@ -748,7 +748,7 @@ int main(void)
 
 		else if(Mode == 2)
 		{
-			//该低通滤波效果不行
+			//低通滤波
 //			Right.Hip.AngxFilter = low_pass_filter(Right.Hip.AngxCal);
 //			Right.Knee.AngxFilter = low_pass_filter(Right.Knee.AngxCal);
 //			Right.Ankle.AngxFilter = low_pass_filter(Right.Ankle.AngxCal);
@@ -763,7 +763,7 @@ int main(void)
 			for(int i=0; i<100; i++){
 				tempx[i] = KneeReference[i];
 			}
-//			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
+			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
 			DMA_usart2_printf("%f\r\n",Normal.PKneeS1[0]);
 			free(tempx);
 
@@ -1806,22 +1806,22 @@ void DataDiv(struct DataFit *Fit){
 	}
 	else if(Fit->FitFlagKnee == 1){
 		//内存分配方式1
-		double *arrayKnee = createArray(Fit->sizenum + 1);
-		double *arrayX = createArray(Fit->sizenum + 1);
+		double *arrayKnee = createArray(Fit->sizenum);
+		double *arrayX = createArray(Fit->sizenum);
 
 		//内存分配方式2
 //		double *arrayKnee = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
 //		double *arrayX = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
 
-		for(int i=0;i<Fit->sizenum+1;i++){
-			arrayX[i]=i+1;
-			arrayKnee[i] = Fit->FitBufKnee[i];
+		for(int i=0;i<Fit->sizenum;i++){
+			arrayX[i]=(double)i/100+0.01;
+			arrayKnee[i] = Fit->FitBufKnee[i];// /180*3.14
 			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
 		}
-		DMA_usart2_printf("%d\r\n",Fit->sizenum+1);
+		DMA_usart2_printf("%d\r\n",Fit->sizenum);
 //		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
 //		DMA_usart2_printf("%d\r\n",sizenum);
-		polyfit(Fit->sizenum+1, arrayX, arrayKnee, dimension, Fit->PKneeS1);
+		polyfit(Fit->sizenum, arrayX, arrayKnee, dimension, Fit->PKneeS1);
 		DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
 				Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 		Fit->FitFlagKnee = 0;
@@ -1950,15 +1950,46 @@ void gauss_solve(int n,double A[],double x[],double b[])
 }
 
 /********************************实现函数**************************************
-*函数原型:	void Calculate(double p[], int n)
+*函数原型:	void Calculate(int poly_n, int n, double p[], double x[], int Flag)
 *功　　能:	计算拟合函数值
 *修改日期:	20231207
  * 参数		| 介绍
  * ---------+--------------------------------------
  * 无		| 无
 *******************************************************************************/
-void Calculate(double p[], int n){
-
+void Calculate(int poly_n, int n, double p[], double x[], int Flag){
+	switch (Flag){
+	case 0:
+		Normal.FitKnee_0_num = n;
+		for(int i=0; i<n; i++){
+			Normal.FitKnee_0[i] = Horner_Algorithm(5,p,x[i]);
+			Normal.FitKneeT_0[i] = Slop(5,p,x[i]);
+		}
+		break;
+	case 1:
+		Normal.FitKnee_1_num = n;
+		for(int i=0; i<n; i++){
+			Normal.FitKnee_1[i] = Horner_Algorithm(5,p,x[i]);
+			Normal.FitKneeT_1[i] = Slop(5,p,x[i]);
+		}
+		break;
+	case 2:
+		Normal.FitKnee_2_num = n;
+		for(int i=0; i<n; i++){
+			Normal.FitKnee_2[i] = Horner_Algorithm(5,p,x[i]);
+			Normal.FitKneeT_2[i] = Slop(5,p,x[i]);
+		}
+		break;
+	case 3:
+		Normal.FitKnee_3_num = n;
+		for(int i=0; i<n; i++){
+			Normal.FitKnee_3[i] = Horner_Algorithm(5,p,x[i]);
+			Normal.FitKneeT_3[i] = Slop(5,p,x[i]);
+		}
+		break;
+	default:
+		break;
+	}
 }
 
 /********************************实现函数**************************************
@@ -1970,10 +2001,31 @@ void Calculate(double p[], int n){
  * 无		| 无
 *******************************************************************************/
 double Horner_Algorithm(int poly_n, double p[], double x){
-	double y = 0.0;	//存放多项式的值。
+	double y = 0.0;	//存放多项式的值
 	for (int j = poly_n; j>=0; j--)
 	{
 		y = (x * y) + p[j];	//计算多项式的值。
+	}
+	return y;
+}
+
+/********************************实现函数**************************************
+*函数原型:	double Slop(int poly_n, double p[], double x)
+*功　　能:	计算斜率多项式
+*修改日期:	20231208
+ * 参数		| 介绍
+ * ---------+--------------------------------------
+ * 无		| 无
+*******************************************************************************/
+double Slop(int poly_n, double p[], double x){
+	double y = 0.0;	//存放多项式的值
+	double *q = (double *)calloc(poly_n , sizeof(double));
+	for(int i = 1; i<poly_n+1; i++){
+		q[i] = i*p[i];
+	}
+	for(int j = poly_n-1; j>=0; j--)
+	{
+		y = (x * y) + q[j];	//计算多项式的值。
 	}
 	return y;
 }

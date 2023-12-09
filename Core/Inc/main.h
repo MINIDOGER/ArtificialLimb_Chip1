@@ -88,10 +88,18 @@ struct DataFit{
 	double PAnkleS2[6];
 	int sizenum;
 	int State;
+	double FitKnee_0[50];
 	double FitKnee_1[50];
 	double FitKnee_2[50];
 	double FitKnee_3[50];
-	double FitKnee_4[50];
+	int FitKnee_0_num;
+	int FitKnee_1_num;
+	int FitKnee_2_num;
+	int FitKnee_3_num;
+	double FitKneeT_0[50];
+	double FitKneeT_1[50];
+	double FitKneeT_2[50];
+	double FitKneeT_3[50];
 }; //拟合数据缓存与统计
 extern struct DataFit Normal;
 
@@ -218,8 +226,9 @@ double *createArray(int size);
 void DataDiv(struct DataFit *Fit);
 void polyfit(int n,double x[],double y[],int poly_n,double p[]);
 void gauss_solve(int n,double A[],double x[],double b[]);
-void Calculate(double p[], int n);
+void Calculate(int poly_n, int n, double p[], double x[], int Flag);
 double Horner_Algorithm(int poly_n, double p[], double x);
+double Slop(int poly_n, double p[], double x);
 void ModbusRead();
 uint16_t crc16_modbus(uint8_t *data, uint16_t length);
 void low_pass_filter_init(void);
