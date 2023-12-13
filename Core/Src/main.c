@@ -22,6 +22,7 @@
 *修改日期:20231202	滤波函数效果暂时还是不理想，拟合函数测试卡死，在S=2测试模式下现已发现可能原因，下一步尝试修复
 *修改日期:20231202	修改拟合函数，解决nan和卡死问题，下一步需要验证拟合的正确性。卡死：动态分配内存存在问题；nan：输入数据 个数为0
 *修改日期:20231204	修正动态内存分配错误
+*修改日期:20231213	成功拟合，数据分割不是很合理，尝试解决，未测试
 *******************************************************************************/
 
 /*
@@ -424,8 +425,12 @@ int StopFlag = 0;
 *修改日期:	20230531
 *******************************************************************************/
 struct DataFit Normal = {
+		.ploy_n = 5,
 		.sizenum = 0,
-		.State = 0.
+		.State = 0,
+		.Flag_Div = 0,
+		.Flag_Fit = 0,
+		.Flag_Send = 0,
 };
 int sizenum;
 int dimension = 5;
@@ -1703,7 +1708,7 @@ double *createArray(int size)
 
     // 初始化数组
     for (int i = 0; i < size; i++) {
-        array[i] = (double)i;
+        array[i] = 0;
     }
 
     return array;
@@ -1796,9 +1801,10 @@ void DataDiv(struct DataFit *Fit){
 	if(Fit->FitFlagKnee == 0){
 		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
 		if(Fit->sizenum > 3){
-			if(	(Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*
+			if(	((Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*
 				(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
-				|| Fit->sizenum > 50){
+				&& Fit->sizenum > 20)
+				|| Fit->sizenum > 70){
 				Fit->FitFlagKnee = 1;
 			}
 		}
@@ -1808,13 +1814,15 @@ void DataDiv(struct DataFit *Fit){
 		//内存分配方式1
 		double *arrayKnee = createArray(Fit->sizenum);
 		double *arrayX = createArray(Fit->sizenum);
+		double Init_x = 0;
 
 		//内存分配方式2
 //		double *arrayKnee = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
 //		double *arrayX = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
 
 		for(int i=0;i<Fit->sizenum;i++){
-			arrayX[i]=(double)i/100+0.01;
+			Init_x += 0.01;
+			arrayX[i] = Init_x;
 			arrayKnee[i] = Fit->FitBufKnee[i];// /180*3.14
 			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
 		}
@@ -1822,6 +1830,11 @@ void DataDiv(struct DataFit *Fit){
 //		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
 //		DMA_usart2_printf("%d\r\n",sizenum);
 		polyfit(Fit->sizenum, arrayX, arrayKnee, dimension, Fit->PKneeS1);
+		Normal.Flag_Div += 1;
+		if(Normal.Flag_Div >= 5){
+			Normal.Flag_Div = 1;
+		}
+		Calculate(Normal.ploy_n, Normal.sizenum, Fit->PKneeS1, arrayX, Normal.Flag_Div);
 		DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
 				Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 		Fit->FitFlagKnee = 0;
@@ -1959,32 +1972,32 @@ void gauss_solve(int n,double A[],double x[],double b[])
 *******************************************************************************/
 void Calculate(int poly_n, int n, double p[], double x[], int Flag){
 	switch (Flag){
-	case 0:
+	case 1:
 		Normal.FitKnee_0_num = n;
 		for(int i=0; i<n; i++){
-			Normal.FitKnee_0[i] = Horner_Algorithm(5,p,x[i]);
-			Normal.FitKneeT_0[i] = Slop(5,p,x[i]);
-		}
-		break;
-	case 1:
-		Normal.FitKnee_1_num = n;
-		for(int i=0; i<n; i++){
-			Normal.FitKnee_1[i] = Horner_Algorithm(5,p,x[i]);
-			Normal.FitKneeT_1[i] = Slop(5,p,x[i]);
+			Normal.FitKnee_0[i] = Horner_Algorithm(poly_n,p,x[i]);
+			Normal.FitKneeT_0[i] = Slop(poly_n,p,x[i]);
 		}
 		break;
 	case 2:
-		Normal.FitKnee_2_num = n;
+		Normal.FitKnee_1_num = n;
 		for(int i=0; i<n; i++){
-			Normal.FitKnee_2[i] = Horner_Algorithm(5,p,x[i]);
-			Normal.FitKneeT_2[i] = Slop(5,p,x[i]);
+			Normal.FitKnee_1[i] = Horner_Algorithm(poly_n,p,x[i]);
+			Normal.FitKneeT_1[i] = Slop(poly_n,p,x[i]);
 		}
 		break;
 	case 3:
+		Normal.FitKnee_2_num = n;
+		for(int i=0; i<n; i++){
+			Normal.FitKnee_2[i] = Horner_Algorithm(poly_n,p,x[i]);
+			Normal.FitKneeT_2[i] = Slop(poly_n,p,x[i]);
+		}
+		break;
+	case 4:
 		Normal.FitKnee_3_num = n;
 		for(int i=0; i<n; i++){
-			Normal.FitKnee_3[i] = Horner_Algorithm(5,p,x[i]);
-			Normal.FitKneeT_3[i] = Slop(5,p,x[i]);
+			Normal.FitKnee_3[i] = Horner_Algorithm(poly_n,p,x[i]);
+			Normal.FitKneeT_3[i] = Slop(poly_n,p,x[i]);
 		}
 		break;
 	default:

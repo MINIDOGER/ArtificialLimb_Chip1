@@ -78,6 +78,7 @@ struct StateBuf{
 }; //状态统计
 
 struct DataFit{
+	int ploy_n;
 	double FitBufKnee[100];
 //	double FitBufAnkle[100];
 	uint8_t FitFlagKnee;
@@ -96,10 +97,13 @@ struct DataFit{
 	int FitKnee_1_num;
 	int FitKnee_2_num;
 	int FitKnee_3_num;
-	double FitKneeT_0[50];
-	double FitKneeT_1[50];
-	double FitKneeT_2[50];
-	double FitKneeT_3[50];
+	double FitKneeT_0[80];
+	double FitKneeT_1[80];
+	double FitKneeT_2[80];
+	double FitKneeT_3[80];
+	int Flag_Div;
+	int Flag_Fit;
+	int Flag_Send;
 }; //拟合数据缓存与统计
 extern struct DataFit Normal;
 
