@@ -492,7 +492,7 @@ void UART4_IRQHandler(void)
 	memcpy(&Right.Knee.Buf.rxData,p_IsOK4,33);
 	MPU6050ModDataBufDMA(&Right.Knee);
 	Right.Knee.AngxCal = Right.Knee.Angx - Right.Hip.Angx;
-	if(Normal.State == 1){
+	if(Normal.FitStart != 0 && Normal.State == 1){
 		DataDiv(&Normal);
 	}
 

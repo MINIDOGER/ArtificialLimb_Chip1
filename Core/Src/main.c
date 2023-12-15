@@ -426,14 +426,16 @@ int StopFlag = 0;
 *******************************************************************************/
 struct DataFit Normal = {
 		.ploy_n = 5,
+		.Fit_Mode = 4,
 		.sizenum = 0,
 		.State = 0,
+		.FitStart = 0,
 		.Flag_Div = 0,
 		.Flag_Fit = 0,
 		.Flag_Send = 0,
 };
-int sizenum;
-int dimension = 5;
+//int sizenum;
+//int dimension = 5;
 
 /********************************参数声明**************************************
 *参数用途:	参考数据
@@ -707,11 +709,18 @@ int main(void)
 							Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
 							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal);
 					break;
-				case 3: //左侧关节角度、左侧足底压力输出
+				case 3:
+//					//左侧关节角度、左侧足底压力输出
+//					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
+//							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
+//							DataLeftBuf.Data[3],DataLeftBuf.Data[4],DataLeftBuf.Data[7],DataLeftBuf.Data[8],
+//							DataLeftBuf.Data[9],DataLeftBuf.Data[12],DataLeftBuf.Data[13],DataLeftBuf.Data[14]);
+
+					//右侧关节角度、左侧足底压力输出
 					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
-							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
-							DataLeftBuf.Data[3],DataLeftBuf.Data[4],DataLeftBuf.Data[7],DataLeftBuf.Data[8],
-							DataLeftBuf.Data[9],DataLeftBuf.Data[12],DataLeftBuf.Data[13],DataLeftBuf.Data[14]);
+							Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
+							DataRightBufFoot.Data[3],DataRightBufFoot.Data[4],DataRightBufFoot.Data[7],DataRightBufFoot.Data[8],
+							DataRightBufFoot.Data[9],DataRightBufFoot.Data[12],DataRightBufFoot.Data[13],DataRightBufFoot.Data[14]);
 					break;
 				case 4: //左右足底压力输出
 					DMA_usart2_printf("%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
@@ -763,14 +772,14 @@ int main(void)
 
 
 //			tempx = (double *)calloc(100 , sizeof(double));
-			tempx = createArray(100);
-
-			for(int i=0; i<100; i++){
-				tempx[i] = KneeReference[i];
-			}
-			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
-			DMA_usart2_printf("%f\r\n",Normal.PKneeS1[0]);
-			free(tempx);
+//			tempx = createArray(100);
+//
+//			for(int i=0; i<100; i++){
+//				tempx[i] = KneeReference[i];
+//			}
+//			polyfit(100, xtest, tempx, 5, Normal.PKneeS1);
+//			DMA_usart2_printf("%f\r\n",Normal.PKneeS1[0]);
+//			free(tempx);
 
 		}
 		else if(Mode == 0)
@@ -1338,6 +1347,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 							low_pass_filter_init();
 							printf("[InfoFlag]Ts=%.2f\r\n",operand);
 							break;
+						case 'F':
+							Normal.FitStart = (int)operand;
+							Normal.Fit_Mode = (int)operand + 3;
+							printf("[InfoFlag]FS=%d\r\n",(int)operand);
+							break;
 						default:
 							printf("[Info]ErrorFun\r\n");
 							break;
@@ -1799,16 +1813,21 @@ double *createArray(int size)
 *******************************************************************************/
 void DataDiv(struct DataFit *Fit){
 	if(Fit->FitFlagKnee == 0){
-		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
-		if(Fit->sizenum > 3){
-			if(	((Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*
-				(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
-				&& Fit->sizenum > 20)
-				|| Fit->sizenum > 70){
-				Fit->FitFlagKnee = 1;
+		if(Fit->FitStart == 1){
+			Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
+			if(Fit->sizenum > 3){
+				if(	((Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*
+					(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
+					&& Fit->sizenum > 20)
+					|| Fit->sizenum > 70){
+					Fit->FitFlagKnee = 1;
+				}
 			}
+			Fit->sizenum++;
 		}
-		Fit->sizenum++;
+		else if(Fit->FitStart == 2){
+
+		}
 	}
 	else if(Fit->FitFlagKnee == 1){
 		//内存分配方式1
@@ -1827,16 +1846,20 @@ void DataDiv(struct DataFit *Fit){
 			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
 		}
 		DMA_usart2_printf("%d\r\n",Fit->sizenum);
+
 //		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
 //		DMA_usart2_printf("%d\r\n",sizenum);
-		polyfit(Fit->sizenum, arrayX, arrayKnee, dimension, Fit->PKneeS1);
+
+		polyfit(Fit->sizenum, arrayX, arrayKnee, Normal.ploy_n, Fit->PKneeS1);
 		Normal.Flag_Div += 1;
-		if(Normal.Flag_Div >= 5){
+		Normal.Flag_Send += 1;
+		if(Normal.Flag_Div >= Normal.Fit_Mode){
 			Normal.Flag_Div = 1;
 		}
-		Calculate(Normal.ploy_n, Normal.sizenum, Fit->PKneeS1, arrayX, Normal.Flag_Div);
-		DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
-				Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
+		Calculate(Normal.ploy_n, Fit->sizenum, Fit->PKneeS1, arrayX, Normal.Flag_Div);
+//		DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
+//				Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
+
 		Fit->FitFlagKnee = 0;
 		Fit->sizenum = 0;
 		free(arrayKnee);
@@ -1971,38 +1994,46 @@ void gauss_solve(int n,double A[],double x[],double b[])
  * 无		| 无
 *******************************************************************************/
 void Calculate(int poly_n, int n, double p[], double x[], int Flag){
+	double *q = createArray(poly_n);
+	Slop(poly_n, p, q);
 	switch (Flag){
 	case 1:
 		Normal.FitKnee_0_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_0[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_0[i] = Slop(poly_n,p,x[i]);
+			Normal.FitKneeT_0[i] = Horner_Algorithm(poly_n-1,q,x[i]);
+			DMA_usart2_printf("%f\r\n",Normal.FitKnee_0[i]);
 		}
 		break;
 	case 2:
 		Normal.FitKnee_1_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_1[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_1[i] = Slop(poly_n,p,x[i]);
+			Normal.FitKneeT_1[i] = Horner_Algorithm(poly_n-1,q,x[i]);
+			DMA_usart2_printf("%f\r\n",Normal.FitKnee_1[i]);
 		}
 		break;
 	case 3:
 		Normal.FitKnee_2_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_2[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_2[i] = Slop(poly_n,p,x[i]);
+			Normal.FitKneeT_2[i] = Horner_Algorithm(poly_n-1,q,x[i]);
+			DMA_usart2_printf("%f\r\n",Normal.FitKnee_2[i]);
 		}
 		break;
 	case 4:
 		Normal.FitKnee_3_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_3[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_3[i] = Slop(poly_n,p,x[i]);
+			Normal.FitKneeT_3[i] = Horner_Algorithm(poly_n-1,q,x[i]);
+			DMA_usart2_printf("%f\r\n",Normal.FitKnee_3[i]);
 		}
 		break;
 	default:
 		break;
 	}
+	DMA_usart2_printf("%d\r\n",Flag);
+	free(q);
 }
 
 /********************************实现函数**************************************
@@ -2023,24 +2054,17 @@ double Horner_Algorithm(int poly_n, double p[], double x){
 }
 
 /********************************实现函数**************************************
-*函数原型:	double Slop(int poly_n, double p[], double x)
-*功　　能:	计算斜率多项式
-*修改日期:	20231208
+*函数原型:	void Slop(int poly_n, double p[], double q[])
+*功　　能:	计算斜率多项式系数
+*修改日期:	20231215
  * 参数		| 介绍
  * ---------+--------------------------------------
  * 无		| 无
 *******************************************************************************/
-double Slop(int poly_n, double p[], double x){
-	double y = 0.0;	//存放多项式的值
-	double *q = (double *)calloc(poly_n , sizeof(double));
+void Slop(int poly_n, double p[], double q[]){
 	for(int i = 1; i<poly_n+1; i++){
-		q[i] = i*p[i];
+		q[i-1] = i*p[i];
 	}
-	for(int j = poly_n-1; j>=0; j--)
-	{
-		y = (x * y) + q[j];	//计算多项式的值。
-	}
-	return y;
 }
 
 /********************************实现函数**************************************
