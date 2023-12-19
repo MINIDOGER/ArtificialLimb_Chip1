@@ -139,7 +139,7 @@ CANTxMessage can_tx;
 CANRxMessage can_rx;
 Kinco_servo Exoskeleton1;
 /********************************参数声明**************************************
-*参数用途:	足底压力数据
+*参数用途:	足底压力数据 Ps:16点索引为0
 *修改日期:	20230721
 *******************************************************************************/
 struct DataUnionBuf DataRightBufFoot = {
@@ -1813,21 +1813,16 @@ double *createArray(int size)
 *******************************************************************************/
 void DataDiv(struct DataFit *Fit){
 	if(Fit->FitFlagKnee == 0){
-		if(Fit->FitStart == 1){
-			Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
-			if(Fit->sizenum > 3){
-				if(	((Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*
-					(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
-					&& Fit->sizenum > 20)
-					|| Fit->sizenum > 70){
-					Fit->FitFlagKnee = 1;
-				}
+		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
+		if(Fit->sizenum > 3){
+			if(	((Fit->FitBufKnee[Fit->sizenum]-Fit->FitBufKnee[Fit->sizenum-1])*
+				(Fit->FitBufKnee[Fit->sizenum-1]-Fit->FitBufKnee[Fit->sizenum-2])<0
+				&& Fit->sizenum > 15)
+				|| Fit->sizenum > 65){
+				Fit->FitFlagKnee = 1;
 			}
-			Fit->sizenum++;
 		}
-		else if(Fit->FitStart == 2){
-
-		}
+		Fit->sizenum++;
 	}
 	else if(Fit->FitFlagKnee == 1){
 		//内存分配方式1
@@ -1862,8 +1857,72 @@ void DataDiv(struct DataFit *Fit){
 
 		Fit->FitFlagKnee = 0;
 		Fit->sizenum = 0;
+
+		switch(Normal.Flag_Div){
+		case 1:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_0[Normal.FitKnee_0_num-1];
+			break;
+		case 2:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_1[Normal.FitKnee_1_num-1];
+			break;
+		case 3:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_2[Normal.FitKnee_2_num-1];
+			break;
+		case 4:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_3[Normal.FitKnee_3_num-1];
+			break;
+		default:
+			break;
+		}
+		Fit->sizenum++;
+
 		free(arrayKnee);
 		free(arrayX);
+	}
+}
+
+/********************************实现函数**************************************
+*函数原型:	void DataDiv_2
+*功　　能:	数据分割便于拟合
+*修改日期:	20231201
+ * 参数		| 介绍
+ * ---------+--------------------------------------
+ * Fit		| 数据储存位置
+*******************************************************************************/
+void DataDiv_2(struct DataFit *Fit){
+	if(Fit->FitFlagKnee == 0){
+		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
+		Fit->FitBufFoot_12[Fit->sizenum] = DataRightBufFoot.Data[12];
+		Fit->sizenum++;
+
+		if(DataRightBufFoot.Data[12] > 1500){
+			if(Fit->sizenum > 2 && Fit->FitBufFoot_12[Fit->sizenum] - Fit->FitBufFoot_12[Fit->sizenum - 1] <= 0){
+				if(Fit->Flag_Div == 4){
+					Fit->Flag_Div = 1;
+					Fit->FitFlagKnee = 1;
+				}
+				else if(Fit->Flag_Div == 0){
+					Fit->Flag_Div = 1;
+					Fit->sizenum = 0;
+				}
+			}
+		}
+
+		else if(Right.Knee.AngxCal < -40){
+			if(Fit->sizenum > 2 && Fit->FitBufKnee[Fit->sizenum] - Fit->FitBufKnee[Fit->sizenum - 1] >= 0){
+				if(Fit->Flag_Div == 1){
+					Fit->Flag_Div = 2;
+					Fit->FitFlagKnee = 1;
+				}
+				else if(Fit->Flag_Div != 1){
+
+				}
+			}
+		}
+
+		else if(DataRightBufFoot.Data[12] > 400){
+
+		}
 	}
 }
 

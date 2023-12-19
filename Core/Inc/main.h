@@ -82,6 +82,7 @@ struct DataFit{
 	int Fit_Mode;
 	double FitBufKnee[100];
 //	double FitBufAnkle[100];
+	double FitBufFoot_12[100];
 	uint8_t FitFlagKnee;
 	uint8_t FitFlagAnkle;
 	double PKneeS1[6];
