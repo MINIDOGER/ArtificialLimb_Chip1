@@ -1920,9 +1920,82 @@ void DataDiv_2(struct DataFit *Fit){
 			}
 		}
 
-		else if(DataRightBufFoot.Data[12] > 400){
+		else if(DataRightBufFoot.Data[3] > 400 && DataRightBufFoot.Data[4] > 400){
+			if(Fit->Flag_Div == 2){
+				Fit->Flag_Div = 3;
+				Fit->FitFlagKnee = 1;
+			}
+			if(Fit->Flag_Div != 2){
 
+			}
 		}
+
+		else if(DataRightBufFoot.Data[12] > 600){
+			if(Fit->Flag_Div == 3){
+				Fit->Flag_Div = 4;
+				Fit->FitFlagKnee = 1;
+			}
+			if(Fit->Flag_Div != 3){
+
+			}
+		}
+
+
+	}
+	else if(Fit->FitFlagKnee == 1){
+		//内存分配方式1
+		double *arrayKnee = createArray(Fit->sizenum);
+		double *arrayX = createArray(Fit->sizenum);
+		double Init_x = 0;
+
+		//内存分配方式2
+//		double *arrayKnee = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
+//		double *arrayX = (double *)calloc(Fit->sizenum + 1 , sizeof(double));
+
+		for(int i=0;i<Fit->sizenum;i++){
+			Init_x += 0.01;
+			arrayX[i] = Init_x;
+			arrayKnee[i] = Fit->FitBufKnee[i];// /180*3.14
+			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
+		}
+		DMA_usart2_printf("%d\r\n",Fit->sizenum);
+
+//		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
+//		DMA_usart2_printf("%d\r\n",sizenum);
+
+		polyfit(Fit->sizenum, arrayX, arrayKnee, Normal.ploy_n, Fit->PKneeS1);
+		Normal.Flag_Send += 1;
+//		if(Normal.Flag_Div >= Normal.Fit_Mode){
+//			Normal.Flag_Div = 1;
+//		}
+
+		Calculate(Normal.ploy_n, Fit->sizenum, Fit->PKneeS1, arrayX, Normal.Flag_Div);
+//		DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
+//				Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
+
+		Fit->FitFlagKnee = 0;
+		Fit->sizenum = 0;
+
+		switch(Normal.Flag_Div){
+		case 1:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_0[Normal.FitKnee_0_num-1];
+			break;
+		case 2:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_1[Normal.FitKnee_1_num-1];
+			break;
+		case 3:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_2[Normal.FitKnee_2_num-1];
+			break;
+		case 4:
+			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_3[Normal.FitKnee_3_num-1];
+			break;
+		default:
+			break;
+		}
+		Fit->sizenum++;
+
+		free(arrayKnee);
+		free(arrayX);
 	}
 }
 
