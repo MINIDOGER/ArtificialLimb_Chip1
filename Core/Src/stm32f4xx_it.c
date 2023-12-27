@@ -492,17 +492,20 @@ void UART4_IRQHandler(void)
 	memcpy(&Right.Knee.Buf.rxData,p_IsOK4,33);
 	MPU6050ModDataBufDMA(&Right.Knee);
 	Right.Knee.AngxCal = Right.Knee.Angx - Right.Hip.Angx;
-	if(Normal.FitStart != 0){
-		switch(Normal.State){
-		case 1:
-			DataDiv(&Normal);
-			break;
-		case 2:
-			break;
-		default:
-			break;
-		}
-	}
+
+	//拟合测试
+//	if(Normal.State != 0){
+//		switch(Normal.FitStart){
+//		case 1:
+//			DataDiv(&Normal);
+//			break;
+//		case 2:
+//			DataDiv_2(&Normal);
+//			break;
+//		default:
+//			break;
+//		}
+//	}
 
 
 

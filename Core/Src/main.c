@@ -426,10 +426,11 @@ int StopFlag = 0;
 *******************************************************************************/
 struct DataFit Normal = {
 		.ploy_n = 5,
+//		.ploy_n = 4,
 		.Fit_Mode = 4,
 		.sizenum = 0,
 		.State = 0,
-		.FitStart = 0,
+		.FitStart = 2,
 		.Flag_Div = 0,
 		.Flag_Fit = 0,
 		.Flag_Send = 0,
@@ -710,17 +711,17 @@ int main(void)
 							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal);
 					break;
 				case 3:
-//					//左侧关节角度、左侧足底压力输出
-//					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
-//							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
-//							DataLeftBuf.Data[3],DataLeftBuf.Data[4],DataLeftBuf.Data[7],DataLeftBuf.Data[8],
-//							DataLeftBuf.Data[9],DataLeftBuf.Data[12],DataLeftBuf.Data[13],DataLeftBuf.Data[14]);
-
-					//右侧关节角度、左侧足底压力输出
+					//左侧关节角度、左侧足底压力输出
 					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
-							Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
-							DataRightBufFoot.Data[3],DataRightBufFoot.Data[4],DataRightBufFoot.Data[7],DataRightBufFoot.Data[8],
-							DataRightBufFoot.Data[9],DataRightBufFoot.Data[12],DataRightBufFoot.Data[13],DataRightBufFoot.Data[14]);
+							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
+							DataLeftBuf.Data[3],DataLeftBuf.Data[4],DataLeftBuf.Data[7],DataLeftBuf.Data[8],
+							DataLeftBuf.Data[9],DataLeftBuf.Data[12],DataLeftBuf.Data[13],DataLeftBuf.Data[14]);
+
+//					//右侧关节角度、左侧足底压力输出
+//					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
+//							Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
+//							DataRightBufFoot.Data[3],DataRightBufFoot.Data[4],DataRightBufFoot.Data[7],DataRightBufFoot.Data[8],
+//							DataRightBufFoot.Data[9],DataRightBufFoot.Data[12],DataRightBufFoot.Data[13],DataRightBufFoot.Data[14]);
 					break;
 				case 4: //左右足底压力输出
 					DMA_usart2_printf("%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
@@ -1061,7 +1062,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			break;
 		case 0x66:
 			DataLeftBuf.Flag = 2;
-			DMA_usart2_printf("2\r\n");
+//			DMA_usart2_printf("2\r\n");
 			break;
 		default:
 			break;
@@ -1287,15 +1288,19 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 								Left.Ankle.AngxZero = 0;
 								Left.WAIST.AccxZero = 0;
 							}
+							printf("[InfoMPU6050]\r\n");
 							break;
 						case 'B':
+							printf("[InfoModBus]\r\n");
+							break;
+						case 'P':
+							printf("[InfoModePrint]\r\n");
 							break;
 						default:
 							printf("[Info]ErrorFun\r\n");
 							break;
 						}
 						huart1_printf("M%c%d\n",operator2,(int)operand);
-						printf("[InfoMPU6050]\r\n");
 						break;
 					case 'F':
 						switch(operator2)
@@ -1640,6 +1645,21 @@ void FootDataBuf(struct DataUnionBuf *AllData, uint8_t cRx)
 
 			}
 		}
+
+		//左侧拟合
+		if(Normal.State != 0){
+			switch(Normal.FitStart){
+			case 1:
+				DataDiv(&Normal);
+				break;
+			case 2:
+				DataDiv_2(&Normal);
+				break;
+			default:
+				break;
+			}
+		}
+
 		AllData->FootCounter = 0;
 	}
 }
@@ -1891,25 +1911,36 @@ void DataDiv(struct DataFit *Fit){
 *******************************************************************************/
 void DataDiv_2(struct DataFit *Fit){
 	if(Fit->FitFlagKnee == 0){
-		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
-		Fit->FitBufFoot_12[Fit->sizenum] = DataRightBufFoot.Data[12];
+//		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
+//		Fit->FitBufFoot_12[Fit->sizenum] = DataRightBufFoot.Data[12];
+		Fit->FitBufKnee[Fit->sizenum] = Left.Knee.AngxCal;
+		Fit->FitBufFoot_12[Fit->sizenum] = DataLeftBuf.Data[12];
 		Fit->sizenum++;
 
-		if(DataRightBufFoot.Data[12] > 1500){
-			if(Fit->sizenum > 2 && Fit->FitBufFoot_12[Fit->sizenum] - Fit->FitBufFoot_12[Fit->sizenum - 1] <= 0){
-				if(Fit->Flag_Div == 4){
-					Fit->Flag_Div = 1;
-					Fit->FitFlagKnee = 1;
-				}
-				else if(Fit->Flag_Div == 0){
-					Fit->Flag_Div = 1;
-					Fit->sizenum = 0;
-				}
+		if(DataLeftBuf.Data[12] > 1600 && (Fit->Flag_Div == 4 || Fit->Flag_Div == 0)){
+//			if(Fit->sizenum > 2 && Fit->FitBufFoot_12[Fit->sizenum] - Fit->FitBufFoot_12[Fit->sizenum - 1] <= 0){
+//				if(Fit->Flag_Div == 4){
+//					Fit->Flag_Div = 1;
+//					Fit->FitFlagKnee = 1;
+//				}
+//				else if(Fit->Flag_Div == 0){
+//					Fit->Flag_Div = 1;
+//					Fit->sizenum = 0;
+//				}
+//			}
+
+			if(Fit->Flag_Div == 4){
+				Fit->Flag_Div = 1;
+				Fit->FitFlagKnee = 1;
+			}
+			else if(Fit->Flag_Div == 0){
+				Fit->Flag_Div = 1;
+				Fit->sizenum = 0;
 			}
 		}
 
-		else if(Right.Knee.AngxCal < -40){
-			if(Fit->sizenum > 2 && Fit->FitBufKnee[Fit->sizenum] - Fit->FitBufKnee[Fit->sizenum - 1] >= 0){
+		else if(Left.Knee.AngxCal < -40 && Fit->Flag_Div == 1){
+			if(Fit->sizenum > 3 && (Fit->FitBufKnee[Fit->sizenum] - Fit->FitBufKnee[Fit->sizenum - 1] > 0) && (Fit->FitBufKnee[Fit->sizenum - 1] - Fit->FitBufKnee[Fit->sizenum - 2] > 0)){
 				if(Fit->Flag_Div == 1){
 					Fit->Flag_Div = 2;
 					Fit->FitFlagKnee = 1;
@@ -1920,7 +1951,7 @@ void DataDiv_2(struct DataFit *Fit){
 			}
 		}
 
-		else if(DataRightBufFoot.Data[3] > 400 && DataRightBufFoot.Data[4] > 400){
+		else if(DataLeftBuf.Data[3] > 400 && DataLeftBuf.Data[4] > 400 && Fit->Flag_Div == 2){
 			if(Fit->Flag_Div == 2){
 				Fit->Flag_Div = 3;
 				Fit->FitFlagKnee = 1;
@@ -1930,7 +1961,7 @@ void DataDiv_2(struct DataFit *Fit){
 			}
 		}
 
-		else if(DataRightBufFoot.Data[12] > 600){
+		else if(DataLeftBuf.Data[12] > 600 && Fit->Flag_Div == 3){
 			if(Fit->Flag_Div == 3){
 				Fit->Flag_Div = 4;
 				Fit->FitFlagKnee = 1;
@@ -1940,7 +1971,16 @@ void DataDiv_2(struct DataFit *Fit){
 			}
 		}
 
-
+		else if(Fit->sizenum > 70){
+			DMA_usart2_printf("e\r\n");
+			if(Fit->Flag_Div >= 4){
+				Fit->Flag_Div = 1;
+			}
+			else{
+				Fit->Flag_Div++;
+			}
+			Fit->FitFlagKnee = 1;
+		}
 	}
 	else if(Fit->FitFlagKnee == 1){
 		//内存分配方式1
@@ -1976,23 +2016,25 @@ void DataDiv_2(struct DataFit *Fit){
 		Fit->FitFlagKnee = 0;
 		Fit->sizenum = 0;
 
-		switch(Normal.Flag_Div){
-		case 1:
-			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_0[Normal.FitKnee_0_num-1];
-			break;
-		case 2:
-			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_1[Normal.FitKnee_1_num-1];
-			break;
-		case 3:
-			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_2[Normal.FitKnee_2_num-1];
-			break;
-		case 4:
-			Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_3[Normal.FitKnee_3_num-1];
-			break;
-		default:
-			break;
+		for(int i=0; i<3; i++){
+			switch(Normal.Flag_Div){
+			case 1:
+				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_0[Normal.FitKnee_0_num-3+i];
+				break;
+			case 2:
+				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_1[Normal.FitKnee_1_num-3+i];
+				break;
+			case 3:
+				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_2[Normal.FitKnee_2_num-3+i];
+				break;
+			case 4:
+				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_3[Normal.FitKnee_3_num-3+i];
+				break;
+			default:
+				break;
+			}
+			Fit->sizenum++;
 		}
-		Fit->sizenum++;
 
 		free(arrayKnee);
 		free(arrayX);
