@@ -240,7 +240,8 @@ void Slop(int poly_n, double p[], double q[]);
 void ModbusRead();
 uint16_t crc16_modbus(uint8_t *data, uint16_t length);
 void low_pass_filter_init(void);
-float low_pass_filter(float value);
+//float low_pass_filter(float value);
+float low_pass_filter(float value, int Joint);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

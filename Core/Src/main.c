@@ -697,7 +697,7 @@ int main(void)
 //							MIT_B.Pos, MIT_B.PosOut, MIT_B.Vel, MIT_B.VelOut, MIT_B.TorOut);
 					break;
 				case 1: //右侧关节角度、角加速度、加速度输出
-
+					Right.Knee.AngxCal = low_pass_filter(Right.Knee.AngxCal,1);
 					DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
 							Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
 							Right.Hip.AngAccx,Right.Knee.AngAccx,Right.Ankle.AngAccx,
@@ -712,16 +712,24 @@ int main(void)
 					break;
 				case 3:
 					//左侧关节角度、左侧足底压力输出
-					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
-							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
-							DataLeftBuf.Data[3],DataLeftBuf.Data[4],DataLeftBuf.Data[7],DataLeftBuf.Data[8],
-							DataLeftBuf.Data[9],DataLeftBuf.Data[12],DataLeftBuf.Data[13],DataLeftBuf.Data[14]);
+//					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
+//							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
+//							DataLeftBuf.Data[3],DataLeftBuf.Data[4],DataLeftBuf.Data[7],DataLeftBuf.Data[8],
+//							DataLeftBuf.Data[9],DataLeftBuf.Data[12],DataLeftBuf.Data[13],DataLeftBuf.Data[14]);
 
 //					//右侧关节角度、左侧足底压力输出
 //					DMA_usart2_printf("%.2f,%.2f,%.2f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
 //							Right.Hip.AngxCal,Right.Knee.AngxCal,Right.Ankle.AngxCal,
 //							DataRightBufFoot.Data[3],DataRightBufFoot.Data[4],DataRightBufFoot.Data[7],DataRightBufFoot.Data[8],
 //							DataRightBufFoot.Data[9],DataRightBufFoot.Data[12],DataRightBufFoot.Data[13],DataRightBufFoot.Data[14]);
+
+//					Left.Hip.AngxCal = low_pass_filter(Left.Hip.AngxCal);
+//					Left.Knee.AngxCal = low_pass_filter(Left.Knee.AngxCal);
+//					Left.Ankle.AngxCal = low_pass_filter(Left.Ankle.AngxCal);
+					DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f\r\n",
+							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
+							low_pass_filter(Left.Knee.AngxCal,1));
+
 					break;
 				case 4: //左右足底压力输出
 					DMA_usart2_printf("%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f,%.0f\r\n",
@@ -1913,8 +1921,13 @@ void DataDiv_2(struct DataFit *Fit){
 	if(Fit->FitFlagKnee == 0){
 //		Fit->FitBufKnee[Fit->sizenum] = Right.Knee.AngxCal;
 //		Fit->FitBufFoot_12[Fit->sizenum] = DataRightBufFoot.Data[12];
-		Fit->FitBufKnee[Fit->sizenum] = Left.Knee.AngxCal;
+
+		Fit->FitBufKnee[Fit->sizenum] = low_pass_filter(Left.Knee.AngxCal, 1);
 		Fit->FitBufFoot_12[Fit->sizenum] = DataLeftBuf.Data[12];
+
+//		Fit->FitBufKnee[Fit->sizenum] = low_pass_filter(Left.Knee.AngxCal);
+//		Fit->FitBufFoot_12[Fit->sizenum] = low_pass_filter(DataLeftBuf.Data[12]);
+
 		Fit->sizenum++;
 
 		if(DataLeftBuf.Data[12] > 1600 && (Fit->Flag_Div == 4 || Fit->Flag_Div == 0)){
@@ -2294,6 +2307,32 @@ void low_pass_filter_init(void){
     alpha = b / (b + 1);
 }
 
+///********************************实现函数**************************************
+//*函数原型:	low_pass_filter()
+//*功　　能:	滤波器
+//*修改日期:	20231129
+// * 参数		| 介绍
+// * ---------+--------------------------------------
+//* value		| 值
+//*******************************************************************************/
+//float low_pass_filter(float value){
+//    static float out_last = 0; //上一次滤波值
+//    float out;
+//
+//  /***************** 如果第一次进入，则给 out_last 赋值 ******************/
+//    static char fisrt_flag = 1;
+//    if (fisrt_flag == 1){
+//        fisrt_flag = 0;
+//        out_last = value;
+//    }
+//
+//  /*************************** 一阶滤波 *********************************/
+//    out = out_last + alpha * (value - out_last);
+//    out_last = out;
+//
+//    return out;
+//}
+
 /********************************实现函数**************************************
 *函数原型:	low_pass_filter()
 *功　　能:	滤波器
@@ -2302,20 +2341,75 @@ void low_pass_filter_init(void){
  * ---------+--------------------------------------
 * value		| 值
 *******************************************************************************/
-float low_pass_filter(float value){
-    static float out_last = 0; //上一次滤波值
+float low_pass_filter(float value, int Joint){
+    static float out_last_Hip = 0; //上一次滤波值
+    static float out_last_Knee = 0; //上一次滤波值
+    static float out_last_Ankle = 0; //上一次滤波值
+    static float out_last_3 = 0; //上一次滤波值
+    static float out_last_4 = 0; //上一次滤波值
+    static float out_last_12 = 0; //上一次滤波值
     float out;
 
   /***************** 如果第一次进入，则给 out_last 赋值 ******************/
     static char fisrt_flag = 1;
     if (fisrt_flag == 1){
         fisrt_flag = 0;
-        out_last = value;
+        switch(Joint){
+        case 0:
+        	out_last_Hip = value;
+        	break;
+        case 1:
+        	out_last_Knee = value;
+        	break;
+        case 2:
+        	out_last_Ankle = value;
+        	break;
+        case 3:
+        	out_last_3 = value;
+        	break;
+        case 4:
+        	out_last_4 = value;
+        	break;
+        case 5:
+        	out_last_12 = value;
+        	break;
+        default:
+        	break;
+        }
     }
 
+    /*************************** 一阶滤波 *********************************/
+    switch(Joint){
+    case 0:
+        out = out_last_Hip + alpha * (value - out_last_Hip);
+        out_last_Hip = out;
+    	break;
+    case 1:
+        out = out_last_Knee + alpha * (value - out_last_Knee);
+        out_last_Knee = out;
+    	break;
+    case 2:
+        out = out_last_Ankle + alpha * (value - out_last_Ankle);
+        out_last_Ankle = out;
+    	break;
+    case 3:
+        out = out_last_3 + alpha * (value - out_last_3);
+        out_last_3 = out;
+    	break;
+    case 4:
+        out = out_last_4 + alpha * (value - out_last_4);
+        out_last_4 = out;
+    	break;
+    case 5:
+        out = out_last_12 + alpha * (value - out_last_12);
+        out_last_12 = out;
+    	break;
+    default:
+    	break;
+    }
   /*************************** 一阶滤波 *********************************/
-    out = out_last + alpha * (value - out_last);
-    out_last = out;
+//    out = out_last + alpha * (value - out_last);
+//    out_last = out;
 
     return out;
 }
