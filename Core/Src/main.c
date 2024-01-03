@@ -742,6 +742,41 @@ int main(void)
 //					DataDiv(&Normal);
 //					DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
 //							Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
+
+					//输出数据测试
+					if(Normal.Flag_Fit > 0){
+						switch(Normal.Flag_Send){
+						case 0:
+							for(int i = 0; i < Normal.FitKnee_0_num-3; i++){
+								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_0[i]);
+							}
+							break;
+						case 1:
+							for(int i = 0; i < Normal.FitKnee_1_num-3; i++){
+								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_1[i]);
+							}
+							break;
+						case 2:
+							for(int i = 0; i < Normal.FitKnee_2_num-3; i++){
+								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_2[i]);
+							}
+							break;
+						case 3:
+							for(int i = 0; i < Normal.FitKnee_3_num-3; i++){
+								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_3[i]);
+							}
+							break;
+						default:
+							break;
+						}
+
+						Normal.Flag_Send += 1;
+						if(Normal.Flag_Send >= 4){
+							Normal.Flag_Send = 1;
+						}
+						Normal.Flag_Send -= 1;
+					}
+
 				default:
 					break;
 				}
@@ -2016,13 +2051,13 @@ void DataDiv_2(struct DataFit *Fit){
 //		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
 //		DMA_usart2_printf("%d\r\n",sizenum);
 
-		polyfit(Fit->sizenum, arrayX, arrayKnee, Normal.ploy_n, Fit->PKneeS1);
-		Normal.Flag_Send += 1;
+		polyfit(Fit->sizenum, arrayX, arrayKnee, Fit->ploy_n, Fit->PKneeS1);
+		Fit->Flag_Fit += 1;
 //		if(Normal.Flag_Div >= Normal.Fit_Mode){
 //			Normal.Flag_Div = 1;
 //		}
 
-		Calculate(Normal.ploy_n, Fit->sizenum, Fit->PKneeS1, arrayX, Normal.Flag_Div);
+		Calculate(Fit->ploy_n, Fit->sizenum, Fit->PKneeS1, arrayX, Fit->Flag_Div);
 //		DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
 //				Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 
@@ -2030,18 +2065,18 @@ void DataDiv_2(struct DataFit *Fit){
 		Fit->sizenum = 0;
 
 		for(int i=0; i<3; i++){
-			switch(Normal.Flag_Div){
+			switch(Fit->Flag_Div){
 			case 1:
-				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_0[Normal.FitKnee_0_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_0[Fit->FitKnee_0_num-3+i];
 				break;
 			case 2:
-				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_1[Normal.FitKnee_1_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_1[Fit->FitKnee_1_num-3+i];
 				break;
 			case 3:
-				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_2[Normal.FitKnee_2_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_2[Fit->FitKnee_2_num-3+i];
 				break;
 			case 4:
-				Fit->FitBufKnee[Fit->sizenum] = Normal.FitKnee_3[Normal.FitKnee_3_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_3[Fit->FitKnee_3_num-3+i];
 				break;
 			default:
 				break;
