@@ -23,6 +23,7 @@
 *修改日期:20231202	修改拟合函数，解决nan和卡死问题，下一步需要验证拟合的正确性。卡死：动态分配内存存在问题；nan：输入数据 个数为0
 *修改日期:20231204	修正动态内存分配错误
 *修改日期:20231213	成功拟合，数据分割不是很合理，尝试解决，未测试
+*修改日期:20240103	拟合\数据分割基本告一段落，输出初步代码编写
 *******************************************************************************/
 
 /*
@@ -433,7 +434,7 @@ struct DataFit Normal = {
 		.FitStart = 2,
 		.Flag_Div = 0,
 		.Flag_Fit = 0,
-		.Flag_Send = 0,
+		.Flag_Send = 1,
 };
 //int sizenum;
 //int dimension = 5;
@@ -625,15 +626,21 @@ int main(void)
 				switch(MITFlag)
 				{
 				case 1: //膝踝双关节指令发送
-					MIT_A.Pos = KneeReference[timCounter] + 0.09;
+
+					//既定轨迹测试
+//					MIT_A.Pos = KneeReference[timCounter] + 0.09;
 //					MIT_A.Vel = KneeSpeedReference[timCounter];
-					MIT_A.Kp = KneeKPReference[timCounter];
+//					MIT_A.Kp = KneeKPReference[timCounter];
+
 					CanSend(MIT_A.CanID,MIT_A.Pos,MIT_A.Vel,MIT_A.Kp,MIT_A.Kd,MIT_A.Tor,hcan1);
 					CanRead(hcan1);
 					HAL_Delay_us(50);
-					MIT_B.Pos = AnkleReference[timCounter];
+
+					//既定轨迹测试
+//					MIT_B.Pos = AnkleReference[timCounter];
 //					MIT_B.Vel = AnkleSpeedReference[timCounter];
-					MIT_B.Kp = AnkleKPReference[timCounter];
+//					MIT_B.Kp = AnkleKPReference[timCounter];
+
 					CanSend(MIT_B.CanID,MIT_B.Pos,MIT_B.Vel,MIT_B.Kp,MIT_B.Kd,MIT_B.Tor,hcan2);
 					CanRead(hcan2);
 					break;
@@ -651,12 +658,12 @@ int main(void)
 //						}
 //					}
 
-					MIT_A.Pos = KneeReference[timCounter] + 0.09;
-					MIT_A.Tor = KneeFr[timCounter];
-					MIT_A.Kp = KneeKPReference[timCounter];
-
-					CanSend(MIT_A.CanID,MIT_A.Pos,MIT_A.Vel,MIT_A.Kp,MIT_A.Kd,MIT_A.Tor,hcan1);
-					CanRead(hcan1);
+//					MIT_A.Pos = KneeReference[timCounter] + 0.09;
+//					MIT_A.Tor = KneeFr[timCounter];
+//					MIT_A.Kp = KneeKPReference[timCounter];
+//
+//					CanSend(MIT_A.CanID,MIT_A.Pos,MIT_A.Vel,MIT_A.Kp,MIT_A.Kd,MIT_A.Tor,hcan1);
+//					CanRead(hcan1);
 					break;
 				case 3: //踝关节指令发送 0x02
 //					if(MIT_B.PosOut <= -0.8 && StopFlag == 0){
@@ -676,6 +683,7 @@ int main(void)
 
 					CanSend(MIT_B.CanID,MIT_B.Pos,MIT_B.Vel,MIT_B.Kp,MIT_B.Kd,MIT_B.Tor,hcan2);
 					CanRead(hcan2);
+					break;
 				default:
 					break;
 				}
@@ -726,9 +734,12 @@ int main(void)
 //					Left.Hip.AngxCal = low_pass_filter(Left.Hip.AngxCal);
 //					Left.Knee.AngxCal = low_pass_filter(Left.Knee.AngxCal);
 //					Left.Ankle.AngxCal = low_pass_filter(Left.Ankle.AngxCal);
-					DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f\r\n",
-							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
-							low_pass_filter(Left.Knee.AngxCal,1));
+//					DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f\r\n",
+//							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal,
+//							low_pass_filter(Left.Knee.AngxCal,1));
+
+					DMA_usart2_printf("%.2f,%.2f,%.2f\r\n",
+							Left.Hip.AngxCal,Left.Knee.AngxCal,Left.Ankle.AngxCal);
 
 					break;
 				case 4: //左右足底压力输出
@@ -743,40 +754,52 @@ int main(void)
 //					DMA_usart2_printf("%f,%f,%f,%f,%f,%f\r\n",
 //							Normal.PKneeS1[0],Normal.PKneeS1[1],Normal.PKneeS1[2],Normal.PKneeS1[3],Normal.PKneeS1[4],Normal.PKneeS1[5]);
 
-					//输出数据测试
-					if(Normal.Flag_Fit > 0){
-						switch(Normal.Flag_Send){
-						case 0:
-							for(int i = 0; i < Normal.FitKnee_0_num-3; i++){
-								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_0[i]);
-							}
-							break;
-						case 1:
-							for(int i = 0; i < Normal.FitKnee_1_num-3; i++){
-								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_1[i]);
-							}
-							break;
-						case 2:
-							for(int i = 0; i < Normal.FitKnee_2_num-3; i++){
-								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_2[i]);
-							}
-							break;
-						case 3:
-							for(int i = 0; i < Normal.FitKnee_3_num-3; i++){
-								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_3[i]);
-							}
-							break;
-						default:
-							break;
-						}
+					//输出数据测试:不能定时输出
+//					if(Normal.Flag_Fit > 0){
+//						switch(Normal.Flag_Send){
+//						case 0:
+//							for(int i = 0; i < Normal.FitKnee_0_num-3; i++){
+//								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_0[i]);
+//							}
+//							break;
+//						case 1:
+//							for(int i = 0; i < Normal.FitKnee_1_num-3; i++){
+//								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_1[i]);
+//							}
+//							break;
+//						case 2:
+//							for(int i = 0; i < Normal.FitKnee_2_num-3; i++){
+//								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_2[i]);
+//							}
+//							break;
+//						case 3:
+//							for(int i = 0; i < Normal.FitKnee_3_num-3; i++){
+//								DMA_usart2_printf("%.2f\r\n",Normal.FitKnee_3[i]);
+//							}
+//							break;
+//						default:
+//							break;
+//						}
+//
+//						Normal.Flag_Send += 1;
+//						if(Normal.Flag_Send >= 4){
+//							Normal.Flag_Send = 0;
+//						}
+//						Normal.Flag_Fit -= 1;
+//					}
 
-						Normal.Flag_Send += 1;
-						if(Normal.Flag_Send >= 4){
-							Normal.Flag_Send = 1;
+					//空循环，进定时器中断
+					if(Normal.Flag_Fit > 1 && Normal.Flag_Div == 2){
+						HAL_TIM_Base_Start_IT(&htim2);
+						while(1){
+							if(Mode != 1)break;
 						}
-						Normal.Flag_Send -= 1;
+					}
+					else{
+						DMA_usart2_printf("%d,%d\r\n",Normal.Flag_Send,Normal.Flag_Div);
 					}
 
+					break;
 				default:
 					break;
 				}
@@ -795,10 +818,11 @@ int main(void)
 					break;
 				case 3: //踝关节指令发送 0x02
 					EnterMotorMode(MIT_B.CanID,hcan2);
+					break;
 				default:
 					break;
 				}
-				HAL_TIM_Base_Start_IT(&htim2);
+//				HAL_TIM_Base_Start_IT(&htim2);
 				Normal.State = 1;
 				ModeFlag = 1;
 			}
@@ -842,6 +866,7 @@ int main(void)
 					break;
 				case 3:
 					ExitMotorMode(MIT_B.CanID,hcan2);
+					break;
 				default:
 					break;
 				}
@@ -849,7 +874,9 @@ int main(void)
 				timCounter = 0;
 				ModeFlag = 0;
 			}
-			Normal.State = 0;
+//			Normal.State = 0;
+			DataDiv_2_Zero();
+
 			while(1)
 			{
 //				DMA_usart2_printf("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f\r\n",
@@ -1203,6 +1230,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 										"Fu%d\n",
 										MITFlag,PrintfFlag,DelayFlag,Delay,DelayUs);
 							}
+							break;
 						default:
 							printf("[Info]ErrorFun\r\n");
 							break;
@@ -1359,6 +1387,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						case 'D':
 							DelayFlag = (int)operand;
 							printf("[InfoFlag]delay%d\r\n",(int)operand);
+							break;
 						case 'm':
 							Delay = (int)operand;
 							printf("[InfoFlag]ms%d\r\n",(int)operand);
@@ -1366,6 +1395,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						case 'u':
 							DelayUs = (int)operand;
 							printf("[InfoFlag]us%d\r\n",(int)operand);
+							break;
 						case 'Z':
 							if(operand == 1){
 								for(int i=0;i<8;i++)
@@ -2044,9 +2074,9 @@ void DataDiv_2(struct DataFit *Fit){
 			Init_x += 0.01;
 			arrayX[i] = Init_x;
 			arrayKnee[i] = Fit->FitBufKnee[i];// /180*3.14
-			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
+//			DMA_usart2_printf("%f\r\n",Fit->FitBufKnee[i]);
 		}
-		DMA_usart2_printf("%d\r\n",Fit->sizenum);
+//		DMA_usart2_printf("%d\r\n",Fit->sizenum);
 
 //		int sizenum = sizeof(&arrayKnee)/ sizeof(arrayKnee[0]);
 //		DMA_usart2_printf("%d\r\n",sizenum);
@@ -2064,19 +2094,19 @@ void DataDiv_2(struct DataFit *Fit){
 		Fit->FitFlagKnee = 0;
 		Fit->sizenum = 0;
 
-		for(int i=0; i<3; i++){
+		for(int i=0; i<4; i++){
 			switch(Fit->Flag_Div){
 			case 1:
-				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_0[Fit->FitKnee_0_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_0[Fit->FitKnee_0_num-4+i];
 				break;
 			case 2:
-				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_1[Fit->FitKnee_1_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_1[Fit->FitKnee_1_num-4+i];
 				break;
 			case 3:
-				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_2[Fit->FitKnee_2_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_2[Fit->FitKnee_2_num-4+i];
 				break;
 			case 4:
-				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_3[Fit->FitKnee_3_num-3+i];
+				Fit->FitBufKnee[Fit->sizenum] = Fit->FitKnee_3[Fit->FitKnee_3_num-4+i];
 				break;
 			default:
 				break;
@@ -2089,6 +2119,20 @@ void DataDiv_2(struct DataFit *Fit){
 	}
 }
 
+/********************************实现函数**************************************
+*函数原型:	void DataDiv_2_Zero()
+*功　　能:	数据分割函数参数归零
+*修改日期:	20240114
+*******************************************************************************/
+void DataDiv_2_Zero(){
+	Normal.State = 0;
+	Normal.sizenum = 0;
+	Normal.FitKnee_0_num = 0;
+	Normal.FitKnee_1_num = 0;
+	Normal.FitKnee_2_num = 0;
+	Normal.FitKnee_3_num = 0;
+	Normal.Flag_Fit = 0;
+}
 
 /********************************实现函数**************************************
 *函数原型:	void polyfit(n,x,y,poly_n,a)
@@ -2223,38 +2267,38 @@ void Calculate(int poly_n, int n, double p[], double x[], int Flag){
 		Normal.FitKnee_0_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_0[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_0[i] = Horner_Algorithm(poly_n-1,q,x[i]);
-			DMA_usart2_printf("%f\r\n",Normal.FitKnee_0[i]);
+			Normal.FitKneeT_0[i] = Horner_Algorithm(poly_n-1,q,x[i]/180.0f*PI);
+//			DMA_usart2_printf("%f\r\n",Normal.FitKnee_0[i]);
 		}
 		break;
 	case 2:
 		Normal.FitKnee_1_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_1[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_1[i] = Horner_Algorithm(poly_n-1,q,x[i]);
-			DMA_usart2_printf("%f\r\n",Normal.FitKnee_1[i]);
+			Normal.FitKneeT_1[i] = Horner_Algorithm(poly_n-1,q,x[i]/180.0f*PI);
+//			DMA_usart2_printf("%f\r\n",Normal.FitKnee_1[i]);
 		}
 		break;
 	case 3:
 		Normal.FitKnee_2_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_2[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_2[i] = Horner_Algorithm(poly_n-1,q,x[i]);
-			DMA_usart2_printf("%f\r\n",Normal.FitKnee_2[i]);
+			Normal.FitKneeT_2[i] = Horner_Algorithm(poly_n-1,q,x[i]/180.0f*PI);
+//			DMA_usart2_printf("%f\r\n",Normal.FitKnee_2[i]);
 		}
 		break;
 	case 4:
 		Normal.FitKnee_3_num = n;
 		for(int i=0; i<n; i++){
 			Normal.FitKnee_3[i] = Horner_Algorithm(poly_n,p,x[i]);
-			Normal.FitKneeT_3[i] = Horner_Algorithm(poly_n-1,q,x[i]);
-			DMA_usart2_printf("%f\r\n",Normal.FitKnee_3[i]);
+			Normal.FitKneeT_3[i] = Horner_Algorithm(poly_n-1,q,x[i]/180.0f*PI);
+//			DMA_usart2_printf("%f\r\n",Normal.FitKnee_3[i]);
 		}
 		break;
 	default:
 		break;
 	}
-	DMA_usart2_printf("%d\r\n",Flag);
+//	DMA_usart2_printf("%d\r\n",Flag);
 	free(q);
 }
 

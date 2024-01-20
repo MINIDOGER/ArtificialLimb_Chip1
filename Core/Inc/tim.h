@@ -38,6 +38,9 @@ extern TIM_HandleTypeDef htim7;
 
 /* USER CODE BEGIN Private defines */
 
+extern int Tim2Timing;
+extern int Tim2Now;
+
 /* USER CODE END Private defines */
 
 void MX_TIM2_Init(void);
@@ -46,6 +49,8 @@ void MX_TIM7_Init(void);
 /* USER CODE BEGIN Prototypes */
 /********************************函数声明**************************************/
 void HAL_Delay_us(uint16_t us);
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+void TIM2_Zero();
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

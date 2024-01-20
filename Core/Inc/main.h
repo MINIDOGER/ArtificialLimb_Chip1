@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -39,6 +39,7 @@ extern "C" {
 
 /********************************常量定义**************************************/
 #define g   9.8
+#define PI	acos(-1)
 
 /* USER CODE END ET */
 
@@ -226,12 +227,14 @@ void Error_Handler(void);
 void huart1_printf(char * fmt,...);
 void Huart_IT_Init();
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 void MPU6050ModDataBuf(struct Data *AllData, uint8_t cRx);
 void FootDataBuf(struct DataUnionBuf *AllData, uint8_t cRx);
 void AngDataBuf(struct DataUnionBuf *AllData, uint8_t cRx);
 double *createArray(int size);
 void DataDiv(struct DataFit *Fit);
 void DataDiv_2(struct DataFit *Fit);
+void DataDiv_2_Zero();
 void polyfit(int n,double x[],double y[],int poly_n,double p[]);
 void gauss_solve(int n,double A[],double x[],double b[]);
 void Calculate(int poly_n, int n, double p[], double x[], int Flag);

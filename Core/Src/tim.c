@@ -21,6 +21,14 @@
 #include "tim.h"
 
 /* USER CODE BEGIN 0 */
+#include "can.h"
+#include "stm32f4xx_it.h"
+
+int Tim2Timing = 13;
+int Tim2Now = 0;
+int SendChange = 0;
+int SendSize = 0;
+int SendCurrent = 0;
 
 /* USER CODE END 0 */
 
@@ -44,7 +52,7 @@ void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 89;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 9999;
+  htim2.Init.Period = 999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -177,14 +185,127 @@ void HAL_Delay_us(uint16_t us){
 	__HAL_TIM_DISABLE(&htim7);	//HAL_TIM_Base_Stop(&htim7)
 }
 
+/********************************实现函数**************************************
+*函数原型:	HAL_TIM_PeriodElapsedCallback()
+*功　　能:	定时器回调函数
+*修改日期:	2023？
+*******************************************************************************/
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	if(htim == &htim2){
-		if(timCounter < 152){
-			timCounter++;
+		if(Tim2Now >= Tim2Timing){
+			//既定轨迹测试
+//			if(timCounter < 152){
+//				timCounter++;
+//			}
+//			else{
+//				timCounter = 0;
+//			}
+
+			//定时发送数据
+			if(Normal.Flag_Fit > 0){
+				if(SendChange == 1){
+
+					if(MIT_A.Pos < 10 && MIT_A.Pos > -80){
+						MIT_A.Pos = MIT_A.Pos/180.0f*PI;
+						MIT_A.Pos = low_pass_filter(MIT_A.Pos, 0);
+						MIT_A.Tor = 0;
+						CanSend(MIT_A.CanID,MIT_A.Pos,MIT_A.Vel,MIT_A.Kp,MIT_A.Kd,MIT_A.Tor,hcan1);
+						CanRead(hcan1);
+						DMA_usart2_printf("%.3f,%.3f,%.3f,%.3f\r\n",
+								MIT_A.Pos, MIT_A.PosOut, MIT_A.Pos-MIT_A.PosOut,MIT_A.Tor);
+					}
+
+					switch(Normal.Flag_Send){
+					case 0:
+						MIT_A.Pos = Normal.FitKnee_0[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_0[SendCurrent];
+//						DMA_usart2_printf("%.2f,0,%d,%d\r\n",Normal.FitKnee_0[SendCurrent],SendCurrent,SendSize);
+						break;
+					case 1:
+						MIT_A.Pos = Normal.FitKnee_1[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_1[SendCurrent];
+//						DMA_usart2_printf("%.2f,1,%d,%d\r\n",Normal.FitKnee_1[SendCurrent],SendCurrent,SendSize);
+						break;
+					case 2:
+						MIT_A.Pos = Normal.FitKnee_2[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_2[SendCurrent];
+//						DMA_usart2_printf("%.2f,2,%d,%d\r\n",Normal.FitKnee_2[SendCurrent],SendCurrent,SendSize);
+						break;
+					case 3:
+						MIT_A.Pos = Normal.FitKnee_3[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_3[SendCurrent];
+//						DMA_usart2_printf("%.2f,3,%d,%d\r\n",Normal.FitKnee_3[SendCurrent],SendCurrent,SendSize);
+						break;
+					default:
+						MIT_A.Pos = Normal.FitKnee_1[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_1[SendCurrent];
+						break;
+					}
+
+					SendCurrent++;
+					if(SendCurrent >= SendSize){
+						SendChange = 0;
+						SendCurrent = 0;
+						Normal.Flag_Send += 1;
+						if(Normal.Flag_Send >= 4){
+							Normal.Flag_Send = 0;
+						}
+						Normal.Flag_Fit -= 1;
+					}
+				}
+				else if(SendChange == 0){
+					switch(Normal.Flag_Send){
+					case 0:
+						SendSize = Normal.FitKnee_0_num - 4;
+						MIT_A.Pos = Normal.FitKnee_0[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_0[SendCurrent];
+//						DMA_usart2_printf("%.2f,0,%d,%d\r\n",Normal.FitKnee_0[SendCurrent],SendCurrent,SendSize);
+						break;
+					case 1:
+						SendSize = Normal.FitKnee_1_num - 4;
+						MIT_A.Pos = Normal.FitKnee_1[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_1[SendCurrent];
+//						DMA_usart2_printf("%.2f,1,%d,%d\r\n",Normal.FitKnee_1[SendCurrent],SendCurrent,SendSize);
+						break;
+					case 2:
+						SendSize = Normal.FitKnee_2_num - 4;
+						MIT_A.Pos = Normal.FitKnee_2[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_2[SendCurrent];
+//						DMA_usart2_printf("%.2f,2,%d,%d\r\n",Normal.FitKnee_2[SendCurrent],SendCurrent,SendSize);
+						break;
+					case 3:
+						SendSize = Normal.FitKnee_3_num - 4;
+						MIT_A.Pos = Normal.FitKnee_3[SendCurrent];
+						MIT_A.Tor = Normal.FitKneeT_3[SendCurrent];
+//						DMA_usart2_printf("%.2f,3,%d,%d\r\n",Normal.FitKnee_3[SendCurrent],SendCurrent,SendSize);
+						break;
+					default:
+						break;
+					}
+
+					SendChange = 1;
+					SendCurrent++;
+				}
+			}
+
+			Tim2Now = 0;
 		}
 		else{
-			timCounter = 0;
+			Tim2Now++;
 		}
 	}
+}
+
+/********************************实现函数**************************************
+*函数原型:	void TIM2_Zero()
+*功　　能:	计时器参数归零
+*修改日期:	20230114
+*******************************************************************************/
+void TIM2_Zero(){
+	Tim2Timing = 10;
+	Tim2Now = 0;
+	SendChange = 0;
+	SendSize = 0;
+	SendCurrent = 0;
 }
 /* USER CODE END 1 */
