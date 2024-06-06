@@ -33,6 +33,8 @@ extern "C" {
 /********************************常量定义**************************************/
 #define P_MIN   -25.5f
 #define P_MAX   25.5f
+//#define P_MIN   -12.5f
+//#define P_MAX   12.5f
 #define V_MIN   -45.0f
 #define V_MAX   45.0f
 #define KP_MIN  0.0f

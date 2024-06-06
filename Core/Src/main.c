@@ -150,6 +150,11 @@ struct DataUnionBuf DataLeftBuf = {
 		.Point = {3,4,7,8,9,12,13,14},
 };
 
+struct ModBus Modbus = {
+	.ModbusCounter = 0,
+	.ModbusFlag = 0.
+};
+
 /********************************参数声明**************************************
 *参数用途:	中断数据缓存
 *修改日期:	20230527
@@ -223,7 +228,53 @@ float KneeReference[] = {
 		-0.399,-0.391,-0.383,-0.375,-0.366,-0.359,-0.351,-0.343,-0.336,-0.328,
 		-0.321,-0.313,-0.306,-0.299,-0.291,-0.284,-0.277,-0.270,-0.263,-0.256,
 		-0.249,-0.242,-0.236,-0.230,-0.225,-0.220,-0.215,-0.211,-0.207,-0.203,
-		-0.200,-0.198,-0.196};
+		-0.200,-0.198,-0.196
+
+//		-0.02830195,-0.02750067,-0.02733117,-0.02765923,-0.0283677, -0.02935568,
+//		-0.03053785,-0.03184374,-0.03321698,-0.03461461,-0.0360063, -0.03737368,
+//		-0.03870957,-0.0400173, -0.04130992,-0.04260952,-0.04394652,-0.04535888,
+//		-0.04689143,-0.04859511,-0.05052627,-0.05274591,-0.055319,  -0.05808937,
+//		-0.061474,  -0.06559461,-0.07054738,-0.07639709,-0.08317448,-0.09087702,
+//		-0.09947276,-0.10890698,-0.1191112, -0.13001384,-0.14155204,-0.15368383,
+//		-0.16639992,-0.179722,  -0.19341042,-0.20873121,-0.22647794,-0.24709957,
+//		-0.27079794,-0.29760009,-0.32741026,-0.36004561,-0.39525952,-0.43275553,
+//		-0.47219477,-0.51319928,-0.55535322,-0.59820371,-0.64126258,-0.68401033,
+//		-0.72518339,-0.76545225,-0.80411882,-0.8404533, -0.87371847,-0.90319573,
+//		-0.92821194,-0.94816585,-0.96255283,-0.9709868, -0.97321822,-0.96914715,
+//		-0.95883048,-0.94248281,-0.92047049,-0.89329874,-0.86085841,-0.82560954,
+//		-0.78826577,-0.74953091,-0.7100616, -0.67043366,-0.63111615,-0.59245781,
+//		-0.55469103,-0.51795951,-0.48237619,-0.44811922,-0.41559736,-0.3862391,
+//		-0.36022104,-0.33761878,-0.31841307,-0.30249875,-0.28969609,-0.27976387,
+//		-0.27241381,-0.2673256, -0.26416202,-0.2625835,-0.26226165,-0.26289099,
+//		-0.26419865,-0.26595143,-0.26795992,-0.2700795, -0.27220812,-0.27428082,
+//		-0.27626135,-0.27813128,-0.27987721,-0.28147708,-0.28288672,-0.2840282,
+//		-0.28478174,-0.28498353,-0.28443194,-0.28290528,-0.28019459,-0.27615547,
+//		-0.27078359,-0.26568821,-0.25995418,-0.25362345,-0.24674358,-0.23936699,
+//		-0.23155017,-0.22335296,-0.21483772,-0.20606862,-0.19711083,-0.18802976,
+//		-0.17889033,-0.16975614,-0.16068876,-0.15174693,-0.14298579,-0.13445612,
+//		-0.12620361,-0.11826801,-0.11068244,-0.10347257,-0.0966559, -0.09024095,
+//		-0.0842265, -0.07860085,-0.07334102,-0.068412,  -0.06376597,-0.05934156,
+//		-0.05506305,-0.0508396, -0.04656453,-0.04211448,-0.03734873,-0.03210833,
+//		-0.02621543,-0.01947245,-0.01166133
+};
+float KneeObstacle[] = {
+		-0.112,-0.112,-0.112,-0.112,-0.113,-0.114,-0.115,-0.117,-0.118,-0.12,
+		-0.121,-0.122,-0.123,-0.124,-0.125,-0.126,-0.127,-0.129,-0.13, -0.133,
+		-0.136,-0.14, -0.145,-0.151,-0.16, -0.17, -0.183,-0.199,-0.217,-0.238,
+		-0.261,-0.286,-0.313,-0.34, -0.368,-0.395,-0.422,-0.45, -0.477,-0.507,
+		-0.54, -0.577,-0.622,-0.676,-0.74, -0.815,-0.9,  -0.993,-1.092,-1.192,
+		-1.289,-1.38, -1.461,-1.53, -1.587,-1.631,-1.663,-1.687,-1.703,-1.715,
+		-1.723,-1.73, -1.734,-1.736,-1.734,-1.728,-1.714,-1.693,-1.661,-1.618,
+		-1.562,-1.493,-1.413,-1.321,-1.22, -1.114,-1.007,-0.901,-0.802,-0.711,
+		-0.633,-0.568,-0.515,-0.475,-0.446,-0.425,-0.41, -0.398,-0.388,-0.379,
+		-0.37, -0.361,-0.352,-0.345,-0.34, -0.336,-0.336,-0.337,-0.341,-0.346,
+		-0.352,-0.358,-0.364,-0.37, -0.374,-0.377,-0.379,-0.38, -0.379,-0.377,
+		-0.374,-0.37, -0.365,-0.36, -0.353,-0.347,-0.34, -0.333,-0.325,-0.317,
+		-0.309,-0.301,-0.293,-0.285,-0.277,-0.269,-0.261,-0.253,-0.246,-0.238,
+		-0.231,-0.223,-0.216,-0.209,-0.201,-0.194,-0.187,-0.18, -0.173,-0.166,
+		-0.159,-0.152,-0.146,-0.14, -0.135,-0.13, -0.125,-0.121,-0.117,-0.114,
+		-0.111,-0.108,-0.105
+};
 float AnkleReference[] = {
 		0.275, 0.279, 0.283, 0.288, 0.293, 0.298, 0.303, 0.309, 0.314,0.319,
 		0.325, 0.330, 0.335, 0.339, 0.344, 0.348, 0.351, 0.354, 0.357,0.360,
@@ -453,6 +504,9 @@ float Kne0[] = {};
 float xtest[100];
 double *tempx;
 float S1[6];
+
+int disf = 0;
+int disf1 = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -546,12 +600,12 @@ int main(void)
 ////		printf("[info]Error_huart5_IT\r\n");
 //	}
 
-//	if(HAL_UART_Receive_IT(&huart6, &cRx.cRx_6, 1) != HAL_OK)
-//	{
-//		__HAL_UART_ENABLE_IT(&huart6, UART_IT_ERR);
-//		Error_Handler();
-////		printf("[info]Error_huart6_IT\r\n");
-//	}
+	if(HAL_UART_Receive_IT(&huart6, &cRx.cRx_6, 1) != HAL_OK)
+	{
+		__HAL_UART_ENABLE_IT(&huart6, UART_IT_ERR);
+		Error_Handler();
+//		printf("[info]Error_huart6_IT\r\n");
+	}
 
 //	// 开启串口1空闲中断
 //	__HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
@@ -586,10 +640,10 @@ int main(void)
 	HAL_UART_Receive_DMA(&huart5, p_IsToReceive5, MAX_RX_LEN);
 
 	// 开启串口6空闲中断
-	__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
+//	__HAL_UART_ENABLE_IT(&huart6, UART_IT_IDLE);
 //	__HAL_DMA_ENABLE_IT(&hdma_usart2_tx, DMA_IT_TC);
-	__HAL_UART_CLEAR_IDLEFLAG(&huart6);
-	HAL_UART_Receive_DMA(&huart6, p_IsToReceive6, MAX_RX_LEN);
+//	__HAL_UART_CLEAR_IDLEFLAG(&huart6);
+//	HAL_UART_Receive_DMA(&huart6, p_IsToReceive6, MAX_RX_LEN);
 
 
 	CAN1_SetFilters();
@@ -627,22 +681,73 @@ int main(void)
 				{
 				case 1: //膝踝双关节指令发送
 
-					//既定轨迹测试
-//					MIT_A.Pos = KneeReference[timCounter] + 0.09;
+					//固定越障轨迹测试
+//					if(disf == 4 && disf1 == 0){
+//						MIT_A.Pos = KneeObstacle[timCounter];
+//						MIT_A.Tor = KneeFr[timCounter];
+//						if(timCounter == 152){
+//							disf = 0;
+//							disf1 = 1;
+//						}
+//					}
+//					else if(disf == 3 && disf1 == 1){
+//						MIT_A.Pos = KneeObstacle[timCounter];
+//						MIT_A.Tor = KneeFr[timCounter];
+//						if(timCounter == 152){
+//							disf = 0;
+//							disf1 = 0;
+//						}
+//					}
+//					else{
+//						MIT_A.Pos = KneeReference[timCounter] + 0.09;
+//	//					MIT_A.Vel = KneeSpeedReference[timCounter];
+//	//					MIT_A.Kp = KneeKPReference[timCounter];
+//						MIT_A.Tor = KneeFr[timCounter];
+//
+////						if(timCounter == 96 && Modbus.ModbusDataDEC < 350 && Modbus.ModbusDataDEC > 280){
+////							Modbus.DisFlag = 1;
+////						}
+//					}
+
+					//障碍物识别
+//					if(Modbus.ModbusFlag == 0){
+//						MIT_A.Pos = KneeReference[timCounter] + 0.09;
+//					}
+//					else{
+//						MIT_A.Pos = KneeObstacle[timCounter];
+//					}
+//					MIT_A.Tor = KneeFr[timCounter];
+//					CanSend(MIT_A.CanID,MIT_A.Pos,MIT_A.Vel,MIT_A.Kp,MIT_A.Kd,MIT_A.Tor,hcan1);
+//					CanRead(hcan1);
+//					HAL_Delay_us(50);
+
+					//既定膝轨迹测试
+					MIT_A.Pos = KneeReference[timCounter] + 0.09;
 //					MIT_A.Vel = KneeSpeedReference[timCounter];
 //					MIT_A.Kp = KneeKPReference[timCounter];
-
+					MIT_A.Tor = KneeFr[timCounter];
 					CanSend(MIT_A.CanID,MIT_A.Pos,MIT_A.Vel,MIT_A.Kp,MIT_A.Kd,MIT_A.Tor,hcan1);
 					CanRead(hcan1);
 					HAL_Delay_us(50);
 
-					//既定轨迹测试
-//					MIT_B.Pos = AnkleReference[timCounter];
+					//既定踝轨迹测试
+					MIT_B.Pos = AnkleReference[timCounter];
 //					MIT_B.Vel = AnkleSpeedReference[timCounter];
 //					MIT_B.Kp = AnkleKPReference[timCounter];
-
+					MIT_B.Tor = AnkleFr[timCounter];
 					CanSend(MIT_B.CanID,MIT_B.Pos,MIT_B.Vel,MIT_B.Kp,MIT_B.Kd,MIT_B.Tor,hcan2);
 					CanRead(hcan2);
+
+					if(MIT_A.Pos > -0.15){
+						ModbusRead();
+						if(Modbus.ModbusDataDEC < 350 && Modbus.ModbusDataDEC > 100){
+							Modbus.ModbusFlag = 1;
+						}
+						else{
+							Modbus.ModbusFlag = 0;
+						}
+					}
+
 					break;
 				case 2: //膝关节指令发送 0x01
 //					MIT_A.Pos = KneeSin[timCounter]; //sin位置跟踪取值
@@ -695,8 +800,8 @@ int main(void)
 //							MIT_A.PosOut,MIT_A.VelOut,MIT_A.TorOut,
 //							MIT_B.PosOut,MIT_B.VelOut,MIT_B.TorOut);
 
-					DMA_usart2_printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f\r\n",
-							MIT_A.Pos, MIT_A.PosOut, MIT_A.Pos-MIT_A.PosOut, MIT_B.Pos, MIT_B.PosOut, MIT_B.Pos-MIT_B.PosOut);
+					DMA_usart2_printf("%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d\r\n",
+							MIT_A.Pos, MIT_A.PosOut, MIT_A.Pos-MIT_A.PosOut, MIT_B.Pos, MIT_B.PosOut, MIT_B.Pos-MIT_B.PosOut,Modbus.ModbusDataDEC);
 
 //					DMA_usart2_printf("%.3f,%.3f,%.3f,%.3f,%.3f\r\n",
 //							MIT_A.Pos, MIT_A.PosOut, MIT_A.Vel, MIT_A.VelOut, MIT_A.TorOut);
@@ -790,7 +895,7 @@ int main(void)
 
 					//空循环，进定时器中断
 					if(Normal.Flag_Fit > 1 && Normal.Flag_Div == 2){
-						HAL_TIM_Base_Start_IT(&htim2);
+//						HAL_TIM_Base_Start_IT(&htim2);
 						while(1){
 							if(Mode != 1)break;
 						}
@@ -800,9 +905,15 @@ int main(void)
 					}
 
 					break;
+				case 6:
+					DMA_usart2_printf("%.2f,%d,%d\r\n",MIT_A.PosOut,Modbus.ModbusDataDEC,Modbus.ModbusFlag);
+					break;
 				default:
 					break;
 				}
+
+//				ModbusRead();
+//				DMA_usart2_printf("[]bug]\r\n");
 			}
 			else if(ModeFlag == 0)
 			{
@@ -822,7 +933,7 @@ int main(void)
 				default:
 					break;
 				}
-//				HAL_TIM_Base_Start_IT(&htim2);
+				HAL_TIM_Base_Start_IT(&htim2);
 				Normal.State = 1;
 				ModeFlag = 1;
 			}
@@ -1009,6 +1120,21 @@ void huart2_printf(char * fmt,...)
     while(i<99&&buffer[i])
     {
         HAL_UART_Transmit(&huart2,(uint8_t *)&buffer[i],1,0xFFFF);
+        i++;
+    }
+    va_end(arg_ptr);
+}
+
+void huart6_printf(char * fmt,...)
+{
+    char buffer[100];
+    uint16_t i=0;
+    va_list arg_ptr;
+    va_start(arg_ptr,fmt);
+    vsnprintf(buffer,100,fmt,arg_ptr);
+    while(i<99&&buffer[i])
+    {
+        HAL_UART_Transmit(&huart6,(uint8_t *)&buffer[i],1,0xFFFF);
         i++;
     }
     va_end(arg_ptr);
@@ -1501,7 +1627,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	/********************************串口6**************************************/
 	else if(huart->Instance == USART6)
 	{
-		FootDataBuf(&DataRightBufFoot, cRx.cRx_6);
+		DisRead(cRx.cRx_6);
 		if(HAL_UART_Receive_IT(&huart6, &cRx.cRx_6, 1) != HAL_OK)
 		{
 			__HAL_UART_ENABLE_IT(&huart6, UART_IT_ERR);
@@ -1976,7 +2102,7 @@ void DataDiv(struct DataFit *Fit){
 
 /********************************实现函数**************************************
 *函数原型:	void DataDiv_2
-*功　　能:	数据分割便于拟合
+*功　　能:	数据分割便于拟合，14支撑，23摆动
 *修改日期:	20231201
  * 参数		| 介绍
  * ---------+--------------------------------------
@@ -2343,13 +2469,78 @@ void Slop(int poly_n, double p[], double q[]){
 *******************************************************************************/
 void ModbusRead(){
 	uint8_t ModbusData[] = {0x50,0x03,0x00,0x34,0x00,0x01,0xc8,0x45};
-	for(int i = 0; i < 7; i++){
-		huart1_printf("%x",ModbusData[i]);
+
+	HAL_UART_Transmit(&huart6,ModbusData,8,0xFFFF);
+
+//	for(int i = 0; i < 7; i++){
+//		huart6_printf("%x",ModbusData[i]);
+//	}
+}
+
+void DisRead(uint8_t cRx){
+////	激光距离传感器解码方案2
+//	DMA_usart2_printf("%s",cRx);
+////	HAL_UART_Transmit(&huart2,cRx,1,0xFFFF);
+////	Modbus.ModbusData[Modbus.ModbusCounter] = cRx;
+//	if(Modbus.ModbusData[0] == 0x50 && Modbus.ModbusData[1] == 0x03){
+//		Modbus.ModbusCounter++;
+//	}
+//	else{
+//		Modbus.ModbusCounter = 0;
+//		Modbus.ModbusData[0] = 0x01;
+//		Modbus.ModbusData[1] = 0x03;
+////		ModbusRead();
+//	}
+//
+//	if(Modbus.ModbusCounter == 6){
+//		Modbus.ModbusDataDEC = (Modbus.ModbusData[3] << 8) | Modbus.ModbusData[4];
+////		DMA_usart2_printf("%d\n",Modbus.ModbusDataDEC);
+//		DMA_usart2_printf("yes\r\n");
+//		if(Modbus.ModbusDataDEC < 20){
+//			Modbus.ModbusFlag = 1;
+//		}
+//		else{
+//			Modbus.ModbusFlag = 0;
+//		}
+//
+//		Modbus.ModbusCounter = 0;
+//		Modbus.ModbusData[0] = 0x01;
+//		Modbus.ModbusData[1] = 0x03;
+//	}
+
+	if(Modbus.ModbusCounter < 1){
+		if(cRx != 0x50){
+			Modbus.ModbusCounter = 0;
+//			DMA_usart2_printf("no\r\n");
+		}
+		else{
+			Modbus.ModbusData[Modbus.ModbusCounter] = cRx;
+			Modbus.ModbusCounter++;
+		}
+	}
+	else if(Modbus.ModbusCounter < 2){
+		if(cRx != 0x03){
+			Modbus.ModbusCounter = 0;
+		}
+		else{
+			Modbus.ModbusData[Modbus.ModbusCounter] = cRx;
+			Modbus.ModbusCounter++;
+		}
+	}
+	else if(Modbus.ModbusCounter < 6){
+		Modbus.ModbusData[Modbus.ModbusCounter] = cRx;
+		Modbus.ModbusCounter++;
+	}
+	else if(Modbus.ModbusCounter == 6){
+		Modbus.ModbusDataDEC = (int)((Modbus.ModbusData[3] << 8) | Modbus.ModbusData[4]);
+//		DMA_usart2_printf("%d\r\n",Modbus.ModbusDataDEC);
+//		DMA_usart2_printf("yes\r\n");
+		Modbus.ModbusCounter = 0;
 	}
 }
 
 /********************************实现函数**************************************
-*函数原型:	void ModbusRead()
+*函数原型:	void crc16_modbus()
 *功　　能:	计算ModbusCRC校验值
 *修改日期:	20231012
  * 参数		| 介绍

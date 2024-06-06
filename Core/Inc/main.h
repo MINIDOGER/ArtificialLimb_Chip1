@@ -132,8 +132,8 @@ struct Data{
 	float AngyZero;
 	float AngzZero; //角度初始位置
 
-	struct TranBuf Buf; //状态
-	struct StateBuf State; //缓存
+	struct TranBuf Buf; //缓存
+	struct StateBuf State; //状态
 	struct DataFit Fit;
 
 	float AngxCal; //关节角度x方向计算值
@@ -211,11 +211,22 @@ struct DataUnionBuf
 	int Point[8];
 };
 
+struct ModBus{
+	uint8_t ModbusData[7];
+	int ModbusCounter;
+	int ModbusDataDEC;
+	int ModbusFlag;
+	int DisFlag;
+};
+extern struct ModBus Modbus;
+
 //extern struct DataUnionBuf DataLeftBufAng;
 extern struct DataUnionBuf DataLeftBuf;
 extern struct DataUnionBuf DataRightBufFoot;
 
 extern int timCounter;
+extern int disf;
+extern int disf1;
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -225,6 +236,8 @@ void Error_Handler(void);
 
 /********************************函数声明**************************************/
 void huart1_printf(char * fmt,...);
+void huart2_printf(char * fmt,...);
+void huart6_printf(char * fmt,...);
 void Huart_IT_Init();
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
@@ -241,6 +254,7 @@ void Calculate(int poly_n, int n, double p[], double x[], int Flag);
 double Horner_Algorithm(int poly_n, double p[], double x);
 void Slop(int poly_n, double p[], double q[]);
 void ModbusRead();
+void DisRead(uint8_t cRx);
 uint16_t crc16_modbus(uint8_t *data, uint16_t length);
 void low_pass_filter_init(void);
 //float low_pass_filter(float value);

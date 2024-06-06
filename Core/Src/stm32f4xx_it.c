@@ -632,8 +632,15 @@ void USART6_IRQHandler(void)
 	  WhichBufIsReady6 = 1;		//切换一下指示器状态
 	}
 
-	memcpy(&DataRightBufFoot.HexBufSumFoot,p_IsOK6,34);
-	FootDataBufDMA(&DataRightBufFoot);
+//	memcpy(&DataRightBufFoot.HexBufSumFoot,p_IsOK6,34);
+//	FootDataBufDMA(&DataRightBufFoot);
+
+//	memcpy(&Modbus.ModbusData,p_IsOK6,7*sizeof(uint8_t));
+//	Modbus.ModbusDataDEC = (short) (Modbus.ModbusData[3] << 8) | Modbus.ModbusData[4];
+//	DMA_usart2_printf("%d,%d,%d,%d,%d,%d,%d\r\n",
+//			Modbus.ModbusData[0],Modbus.ModbusData[1],Modbus.ModbusData[2],Modbus.ModbusData[3],
+//			Modbus.ModbusData[4],Modbus.ModbusData[5],Modbus.ModbusData[6],Modbus.ModbusData[7]);
+//	DMA_usart2_printf("%d\n",Modbus.ModbusDataDEC);
 
 
 	///不管是复制也好，放进去队列也罢，处理你接收到的数据的代码建议从这里结束
